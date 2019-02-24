@@ -71,7 +71,7 @@
               </p><p align="center">
                 <a href="mailto:debi.me@gmail.com">Email</a> &nbsp;/&nbsp;
                 <!-- <a href="assets/DebidattaDwibedi_CV.pdf">CV</a> &nbsp;/&nbsp; -->
-                <a href="https://scholar.google.com/citations?hl=en&user=EPfOJwQAAAAJ">Google Scholar</a> &nbsp/&nbsp 
+                <a href="https://scholar.google.com/citations?hl=en&user=EPfOJwQAAAAJ">Google Scholar</a> &nbsp;/&nbsp; 
                 <a href="https://github.com/debidatta/"> GitHub</a>&nbsp;/&nbsp;
                 <a href="https://www.linkedin.com/in/debidatta-dwibedi-0b115014"> LinkedIn </a>&nbsp;/&nbsp;
                 <a href="https://www.twitter.com/debidatta/"> Twitter </a>
@@ -79,7 +79,7 @@
 
             </p><p align="center">
               <a href="#publications">Publications</a> &nbsp;/&nbsp;
-              <a href="#patents">Patents</a> &nbsp/&nbsp 
+              <a href="#patents">Patents</a> &nbsp;/&nbsp;
               <a href="#talks">Talks</a>&nbsp;/&nbsp;
               <a href="#theses">Theses</a>&nbsp;/&nbsp;
               <a href="#misc">Misc</a>
@@ -113,143 +113,181 @@
         <tbody><tr><td>
           <h2 id="publications">Publications</h2></td></tr>
 
-        <tr>
-          <td width="42%" valign="top"><a href="assets/cheetah.gif"><img src="assets/cheetah.gif" width="100%" height="60%" style="border-style: none"></a>
-          </td><td width="58%" valign="top">
-            <p><a href="https://arxiv.org/abs/1808.00928" id="CHEETAH">
-              <heading>Learning  Actionable  Representations  from  Visual  Observations</heading></a><br>
-              Debidatta Dwibedi, <a href="https://cims.nyu.edu/~tompson/">Jonathan Tompson</a>, Corey Lynch and <a href="https://sermanet.github.io/home/">Pierre Sermanet</a><br>
-              <em><a href="https://www.iros2018.org/">International Conference on Intelligent Robots (IROS) 2018 </a></href> </em>
-              <br>
-              <br>
-              Control agents from pixels by learning self-supervised representations from videos.<br>
+          <tr>
+            <td width="42%" valign="top"><a href="assets/dac.gif"><img src="assets/dac.gif" width="100%" height="60%" style="border-style: none"></a>
+            </td><td width="58%" valign="top">
+              <p><a href="https://arxiv.org/abs/1809.02925" id="DAC">
+                <heading>Discriminator-Actor-Critic: Addressing Sample Inefficiency and Reward Bias in Adversarial Imitation Learning</heading></a><br>
+                <a href="https://github.com/ikostrikov">Ilya Kostrikov</a>, <a href="https://kumarkrishna.github.io/">Kumar Krishna Agrawal</a> , Debidatta Dwibedi, <a href="https://people.eecs.berkeley.edu/~svlevine/">Sergey Levine</a> , and <a href="https://cims.nyu.edu/~tompson/">Jonathan Tompson</a><br>
+                <em><a href="https://www.iclr.cc/">International Conference on Learning Representations (ICLR) 2019 </a></em>
+                <br>
+                <br>
+                Sample efficient imitation learning using off-policy updates and proper handling of terminal states.<br>
 
-            </p>
+              </p>
 
-            <div class="paper" id="mftcn">
-              <a href="https://arxiv.org/abs/1808.00928">paper</a> |
-              <a href="javascript:toggleblock(&#39;mftcn_abs&#39;)">abstract</a> |
-              <a shape="rect" href="javascript:togglebib(&#39;mftcn&#39;)" class="togglebib">bibtex</a> |
-              <a href="https://sites.google.com/corp/view/actionablerepresentations/"> project </a>
+              <div class="paper" id="dac">
+                <a href="https://arxiv.org/abs/1809.02925">paper</a> |
+                <a href="javascript:toggleblock(&#39;dac_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;dac&#39;)" class="togglebib">bibtex</a>
+
+                <p align="justify"> <i id="dac_abs" style="display: none;"> We identify two issues with the family of algorithms based on the Adversarial Imitation Learning framework. The first problem is implicit bias present in the reward functions used in these algorithms. While these biases might work well for some environments, they can also lead to sub-optimal behavior in others. Secondly, even though these algorithms can learn from few expert demonstrations, they require a prohibitively large number of interactions with the environment in order to imitate the expert for many real-world applications. In order to address these issues, we propose a new algorithm called Discriminator-Actor-Critic that uses off-policy Reinforcement Learning to reduce policy-environment interaction sample complexity by an average factor of 10. Furthermore, since our reward function is designed to be unbiased, we can apply our algorithm to many problems without making any task-specific adjustments.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+                 @inproceedings{
+                 kostrikov2018discriminatoractorcritic,
+                 title={Discriminator-Actor-Critic: Addressing Sample Inefficiency and Reward Bias in Adversarial Imitation Learning},
+                 author={Ilya Kostrikov and Kumar Krishna Agrawal and Debidatta Dwibedi and Sergey Levine and Jonathan Tompson},
+                 booktitle={International Conference on Learning Representations},
+                 year={2019},
+                 url={https://openreview.net/forum?id=Hk4fpoA5Km},
+               }
+             </div>
+           </div>
+         </td>
+       </tr>
 
 
-              <p align="justify"> <i id="mftcn_abs" style="display: none;"> In this work we explore a new approach for robots to teach themselves about the world simply by observing it. In particular we investigate the effectiveness of learning task-agnostic representations for continuous control tasks. We extend Time-Contrastive Networks (TCN) that learn from visual observations by embedding multiple frames jointly in the embedding space as opposed to a single frame. We show that by doing so, we are now able to encode both position and velocity attributes significantly more accurately. We test the usefulness of this self-supervised approach in a reinforcement learning setting. We show that the representations learned by agents observing themselves take random actions, or other agents perform tasks successfully, can enable the learning of continuous control policies using algorithms like Proximal Policy Optimization (PPO) using only the learned embeddings as input. We also demonstrate significant improvements on the real-world Pouring dataset with a relative error reduction of 39.4% for motion attributes and 11.1% for static attributes compared to the single-frame baseline.</i> </p>
-
-              <div style="white-space: pre-wrap; display: none;" class="bib">
-                @article{dwibedi2018learning,
-                title={Learning Actionable Representations from Visual Observations},
-                author={Dwibedi, Debidatta and Tompson, Jonathan and Lynch, Corey and Sermanet, Pierre},
-                journal={arXiv preprint arXiv:1808.00928},
-                year={2018}
-              }
-            </div>
-          </div>
-        </td>
-      </tr>
-
-      <tr>
-        <td width="42%" valign="top"><a href="https://arxiv.org/abs/1708.01642"><img src="assets/cutpaste.png" width="100%" style="border-style: none"></a>
+       <tr>
+        <td width="42%" valign="top"><a href="assets/cheetah.gif"><img src="assets/cheetah.gif" width="100%" height="60%" style="border-style: none"></a>
         </td><td width="58%" valign="top">
-          <p><a href="https://arxiv.org/abs/1708.01642" id="CUTPASTE">
-            <heading>Cut, Paste and Learn: Surprisingly Easy Synthesis for Instance Detection</heading></a><br>
-            Debidatta Dwibedi, <a href="http://imisra.github.io/">Ishan Misra</a> and <a href="http://www.cs.cmu.edu/~hebert/">Martial Hebert</a><br>
-            <em><a href="http://iccv2017.thecvf.com/">International Conference on Computrer Vision (ICCV) 2017</a></em>
+          <p><a href="https://arxiv.org/abs/1808.00928" id="CHEETAH">
+            <heading>Learning  Actionable  Representations  from  Visual  Observations</heading></a><br>
+            Debidatta Dwibedi, <a href="https://cims.nyu.edu/~tompson/">Jonathan Tompson</a>, Corey Lynch and <a href="https://sermanet.github.io/home/">Pierre Sermanet</a><br>
+            <em><a href="https://www.iros2018.org/">International Conference on Intelligent Robots (IROS) 2018 </a></href> </em>
             <br>
             <br>
-            Generate synthetic data for detecting objects in scenes.<br>
+            Control agents from pixels by learning self-supervised representations from videos.<br>
 
           </p>
 
-          <div class="paper" id="cutpaste">
-            <a href="https://arxiv.org/abs/1708.01642">paper</a> |
-            <a href="javascript:toggleblock(&#39;cutpaste_abs&#39;)">abstract</a> |
-            <a shape="rect" href="javascript:togglebib(&#39;cutpaste&#39;)" class="togglebib">bibtex</a> |
-            <a href="https://github.com/debidatta/syndata-generation">code</a> |
-            <a href="assets/cutpaste_poster.pdf">poster</a>
+          <div class="paper" id="mftcn">
+            <a href="https://arxiv.org/abs/1808.00928">paper</a> |
+            <a href="javascript:toggleblock(&#39;mftcn_abs&#39;)">abstract</a> |
+            <a shape="rect" href="javascript:togglebib(&#39;mftcn&#39;)" class="togglebib">bibtex</a> |
+            <a href="https://sites.google.com/corp/view/actionablerepresentations/"> project </a>
 
 
-            <p align="justify"> <i id="cutpaste_abs" style="display: none;">A major impediment in rapidly deploying object detection models for instance detection is the lack of large annotated datasets. For example, finding a large labeled dataset containing instances in a particular kitchen is unlikely. Each new environment with new instances requires expensive data collection and annotation. In this paper, we propose a simple approach to generate large annotated instance datasets with minimal effort. Our key insight is that ensuring only patch-level realism provides enough training signal for current object detector models. We automatically `cut' object instances and `paste' them on random backgrounds. A naive way to do this results in pixel artifacts which result in poor performance for trained models. We show how to make detectors ignore these artifacts during training and generate data that gives competitive performance on real data. Our method outperforms existing synthesis approaches and when combined with real images improves relative performance by more than 21% on benchmark datasets. In a cross-domain setting, our synthetic data combined with just 10% real data outperforms models trained on all real data.</i> </p>
+            <p align="justify"> <i id="mftcn_abs" style="display: none;"> In this work we explore a new approach for robots to teach themselves about the world simply by observing it. In particular we investigate the effectiveness of learning task-agnostic representations for continuous control tasks. We extend Time-Contrastive Networks (TCN) that learn from visual observations by embedding multiple frames jointly in the embedding space as opposed to a single frame. We show that by doing so, we are now able to encode both position and velocity attributes significantly more accurately. We test the usefulness of this self-supervised approach in a reinforcement learning setting. We show that the representations learned by agents observing themselves take random actions, or other agents perform tasks successfully, can enable the learning of continuous control policies using algorithms like Proximal Policy Optimization (PPO) using only the learned embeddings as input. We also demonstrate significant improvements on the real-world Pouring dataset with a relative error reduction of 39.4% for motion attributes and 11.1% for static attributes compared to the single-frame baseline.</i> </p>
 
             <div style="white-space: pre-wrap; display: none;" class="bib">
-              @InProceedings{Dwibedi_2017_ICCV,
-              author = {Dwibedi, Debidatta and Misra, Ishan and Hebert, Martial},
-              title = {Cut, Paste and Learn: Surprisingly Easy Synthesis for Instance Detection},
-              booktitle = {The IEEE International Conference on Computer Vision (ICCV)},
-              month = {Oct},
-              year = {2017}
-            }
-          </div>
-        </div>
-      </td>
-    </tr>
+             @inproceedings{dwibedi2018learning,
+             author    = {Dwibedi, Debidatta and Tompson, Jonathan and Lynch, Corey and Sermanet, Pierre},
+             title     = {Learning Actionable Representations from Visual Observations},
+             booktitle = {2018 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+             pages     = {1577--1584},
+             year      = {2018},
+             organization = {IEEE},
+             url       = {https://arxiv.org/abs/1808.00928}
+           }
+         </div>
+       </div>
+     </td>
+   </tr>
 
-    <tr>
-      <td width="42%" valign="top"><a href="assets/cuboid.png"><img src="assets/cuboid.png" width="100%" style="border-style: none"></a>
-      </td><td width="58%" valign="top">
-        <p><a href="https://arxiv.org/abs/1611.10010v1" id="CUBOID">
-          <heading>Deep Cuboid Detection: Beyond 2D Bounding Boxes</heading></a><br>
-          Debidatta Dwibedi, <a href="http://people.csail.mit.edu/tomasz/">Tomasz Malisiewicz</a>, <a href="https://sites.google.com/site/vijaybacademichomepage/home">Vijay Badrinarayanan</a> and <a href="https://ai.google/research/people/AndrewRabinovich">Andrew Rabinovich</a><br>
-          <em>Arxiv Preprint</em>, 2016
-          <br>
-          <br>
-          Cuboid detector using deep learning: finds cuboids in scenes and localizes their corners.<br>
-
-        </p>
-
-        <div class="paper" id="cuboid">
-          <a href="https://arxiv.org/abs/1611.10010v1">paper</a> |
-          <a href="javascript:toggleblock(&#39;cuboid_abs&#39;)">abstract</a> |
-          <a shape="rect" href="javascript:togglebib(&#39;cuboid&#39;)" class="togglebib">bibtex</a>
-
-
-          <p align="justify"> <i id="cuboid_abs" style="display: none;">We present a Deep Cuboid Detector which takes a consumer-quality RGB image of a cluttered scene and localizes all 3D cuboids (box-like objects). Contrary to classical approaches which fit a 3D model from low-level cues like corners, edges, and vanishing points, we propose an end-to-end deep learning system to detect cuboids across many semantic categories (e.g., ovens, shipping boxes, and furniture). We localize cuboids with a 2D bounding box, and simultaneously localize the cuboid's corners, effectively producing a 3D interpretation of box-like objects. We refine keypoints by pooling convolutional features iteratively, improving the baseline method significantly. Our deep learning cuboid detector is trained in an end-to-end fashion and is suitable for real-time applications in augmented reality (AR) and robotics.</i> </p>
-
-          <div style="white-space: pre-wrap; display: none;" class="bib">
-            @article{dwibedi2016deep,
-            title={Deep cuboid detection: Beyond 2d bounding boxes},
-            author={Dwibedi, Debidatta and Malisiewicz, Tomasz and Badrinarayanan, Vijay and Rabinovich, Andrew},
-            journal={arXiv preprint arXiv:1611.10010},
-            year={2016}
-          }
-        </div>
-      </div>
-    </td>
-  </tr>
-
-  <tr>
-    <td width="42%" valign="top"><a href="assets/semantic_graph.png"><img src="assets/semantic_graph.png" width="100%" style="border-style: none"></a>
+   <tr>
+    <td width="42%" valign="top"><a href="https://arxiv.org/abs/1708.01642"><img src="assets/cutpaste.png" width="100%" style="border-style: none"></a>
     </td><td width="58%" valign="top">
-      <p><a href="http://link.springer.com/chapter/10.1007/978-3-319-16181-5_23" id="PA13">
-        <heading>Characterizing Predicate Arity and Spatial Structure for Inductive Learning of Game Rules</heading></a><br>
-        Debidatta Dwibedi and <a href="http://www.cse.iitk.ac.in/users/amit/">Amitabha Mukerjee</a><br>
-        <em><a href="http://profs.sci.univr.it/~cristanm/contact2014/">ECCV 2014 Workshop on Computer Vision + Ontology Applied Cross-Disciplinary Technologies 2014</a></em>
+      <p><a href="https://arxiv.org/abs/1708.01642" id="CUTPASTE">
+        <heading>Cut, Paste and Learn: Surprisingly Easy Synthesis for Instance Detection</heading></a><br>
+        Debidatta Dwibedi, <a href="http://imisra.github.io/">Ishan Misra</a> and <a href="http://www.cs.cmu.edu/~hebert/">Martial Hebert</a><br>
+        <em><a href="http://iccv2017.thecvf.com/">International Conference on Computrer Vision (ICCV) 2017</a></em>
         <br>
         <br>
-        Represent videos as dynamic graphs. Learn rules of games from observing people play games in Kinect videos.<br>
+        Generate synthetic data for detecting objects in scenes.<br>
 
       </p>
 
-      <div class="paper" id="pa13">
-        <a href="http://link.springer.com/chapter/10.1007/978-3-319-16181-5_23">paper</a> |
-        <a href="javascript:toggleblock(&#39;pa13_abs&#39;)">abstract</a> |
-        <a shape="rect" href="javascript:togglebib(&#39;pa13&#39;)" class="togglebib">bibtex</a> |
-        <a href="https://www.youtube.com/playlist?list=PLDd4RddCgh3ctcftujGoS6CzC47fipqWt">videos</a>
+      <div class="paper" id="cutpaste">
+        <a href="https://arxiv.org/abs/1708.01642">paper</a> |
+        <a href="javascript:toggleblock(&#39;cutpaste_abs&#39;)">abstract</a> |
+        <a shape="rect" href="javascript:togglebib(&#39;cutpaste&#39;)" class="togglebib">bibtex</a> |
+        <a href="https://github.com/debidatta/syndata-generation">code</a> |
+        <a href="assets/cutpaste_poster.pdf">poster</a>
 
 
-        <p align="justify"> <i id="pa13_abs" style="display: none;">Where do the predicates in a game ontology come from? We use RGBD vision to learn a) the spatial structure of a board, and b) the number of parameters in a move or transition. These are used to define state-transition predicates for a logical description of each game state. Given a set of videos for a game, we use an improved 3D multi-object tracking to obtain the positions of each piece in games such as 4-peg solitaire or Towers of Hanoi. The spatial positions occupied by pieces over the entire game is clustered, revealing the structure of the board. Each frame is represented as a Semantic Graph with edges encoding spatial relations between pieces. Changes in the graphs between game states reveal the structure of a “move”. Knowledge from spatial structure and semantic graphs is mapped to FOL descriptions of the moves and used in an Inductive Logic framework to infer the valid moves and other rules of the game. Discovered predicate structures and induced rules are demonstrated for several games with varying board layouts and move structures.</i> </p>
+        <p align="justify"> <i id="cutpaste_abs" style="display: none;">A major impediment in rapidly deploying object detection models for instance detection is the lack of large annotated datasets. For example, finding a large labeled dataset containing instances in a particular kitchen is unlikely. Each new environment with new instances requires expensive data collection and annotation. In this paper, we propose a simple approach to generate large annotated instance datasets with minimal effort. Our key insight is that ensuring only patch-level realism provides enough training signal for current object detector models. We automatically `cut' object instances and `paste' them on random backgrounds. A naive way to do this results in pixel artifacts which result in poor performance for trained models. We show how to make detectors ignore these artifacts during training and generate data that gives competitive performance on real data. Our method outperforms existing synthesis approaches and when combined with real images improves relative performance by more than 21% on benchmark datasets. In a cross-domain setting, our synthetic data combined with just 10% real data outperforms models trained on all real data.</i> </p>
 
         <div style="white-space: pre-wrap; display: none;" class="bib">
-          @inproceedings{dwibedi2014characterizing,
-          title={Characterizing Predicate Arity and Spatial Structure for Inductive Learning of Game Rules},
-          author={Dwibedi, Debidatta and Mukerjee, Amitabha},
-          booktitle={European Conference on Computer Vision},
-          pages={323--338},
-          year={2014},
-          organization={Springer}
+          @InProceedings{Dwibedi_2017_ICCV,
+          author = {Dwibedi, Debidatta and Misra, Ishan and Hebert, Martial},
+          title = {Cut, Paste and Learn: Surprisingly Easy Synthesis for Instance Detection},
+          booktitle = {The IEEE International Conference on Computer Vision (ICCV)},
+          month = {Oct},
+          year = {2017}
         }
       </div>
     </div>
   </td>
+</tr>
+
+<tr>
+  <td width="42%" valign="top"><a href="assets/cuboid.png"><img src="assets/cuboid.png" width="100%" style="border-style: none"></a>
+  </td><td width="58%" valign="top">
+    <p><a href="https://arxiv.org/abs/1611.10010v1" id="CUBOID">
+      <heading>Deep Cuboid Detection: Beyond 2D Bounding Boxes</heading></a><br>
+      Debidatta Dwibedi, <a href="http://people.csail.mit.edu/tomasz/">Tomasz Malisiewicz</a>, <a href="https://sites.google.com/site/vijaybacademichomepage/home">Vijay Badrinarayanan</a> and <a href="https://ai.google/research/people/AndrewRabinovich">Andrew Rabinovich</a><br>
+      <em>Arxiv Preprint</em>, 2016
+      <br>
+      <br>
+      Cuboid detector using deep learning: finds cuboids in scenes and localizes their corners.<br>
+
+    </p>
+
+    <div class="paper" id="cuboid">
+      <a href="https://arxiv.org/abs/1611.10010v1">paper</a> |
+      <a href="javascript:toggleblock(&#39;cuboid_abs&#39;)">abstract</a> |
+      <a shape="rect" href="javascript:togglebib(&#39;cuboid&#39;)" class="togglebib">bibtex</a>
+
+
+      <p align="justify"> <i id="cuboid_abs" style="display: none;">We present a Deep Cuboid Detector which takes a consumer-quality RGB image of a cluttered scene and localizes all 3D cuboids (box-like objects). Contrary to classical approaches which fit a 3D model from low-level cues like corners, edges, and vanishing points, we propose an end-to-end deep learning system to detect cuboids across many semantic categories (e.g., ovens, shipping boxes, and furniture). We localize cuboids with a 2D bounding box, and simultaneously localize the cuboid's corners, effectively producing a 3D interpretation of box-like objects. We refine keypoints by pooling convolutional features iteratively, improving the baseline method significantly. Our deep learning cuboid detector is trained in an end-to-end fashion and is suitable for real-time applications in augmented reality (AR) and robotics.</i> </p>
+
+      <div style="white-space: pre-wrap; display: none;" class="bib">
+        @article{dwibedi2016deep,
+        title={Deep cuboid detection: Beyond 2d bounding boxes},
+        author={Dwibedi, Debidatta and Malisiewicz, Tomasz and Badrinarayanan, Vijay and Rabinovich, Andrew},
+        journal={arXiv preprint arXiv:1611.10010},
+        year={2016}
+      }
+    </div>
+  </div>
+</td>
+</tr>
+
+<tr>
+  <td width="42%" valign="top"><a href="assets/semantic_graph.png"><img src="assets/semantic_graph.png" width="100%" style="border-style: none"></a>
+  </td><td width="58%" valign="top">
+    <p><a href="http://link.springer.com/chapter/10.1007/978-3-319-16181-5_23" id="PA13">
+      <heading>Characterizing Predicate Arity and Spatial Structure for Inductive Learning of Game Rules</heading></a><br>
+      Debidatta Dwibedi and <a href="http://www.cse.iitk.ac.in/users/amit/">Amitabha Mukerjee</a><br>
+      <em><a href="http://profs.sci.univr.it/~cristanm/contact2014/">ECCV 2014 Workshop on Computer Vision + Ontology Applied Cross-Disciplinary Technologies 2014</a></em>
+      <br>
+      <br>
+      Represent videos as dynamic graphs. Learn rules of games from observing people play games in Kinect videos.<br>
+
+    </p>
+
+    <div class="paper" id="pa13">
+      <a href="http://link.springer.com/chapter/10.1007/978-3-319-16181-5_23">paper</a> |
+      <a href="javascript:toggleblock(&#39;pa13_abs&#39;)">abstract</a> |
+      <a shape="rect" href="javascript:togglebib(&#39;pa13&#39;)" class="togglebib">bibtex</a> |
+      <a href="https://www.youtube.com/playlist?list=PLDd4RddCgh3ctcftujGoS6CzC47fipqWt">videos</a>
+
+
+      <p align="justify"> <i id="pa13_abs" style="display: none;">Where do the predicates in a game ontology come from? We use RGBD vision to learn a) the spatial structure of a board, and b) the number of parameters in a move or transition. These are used to define state-transition predicates for a logical description of each game state. Given a set of videos for a game, we use an improved 3D multi-object tracking to obtain the positions of each piece in games such as 4-peg solitaire or Towers of Hanoi. The spatial positions occupied by pieces over the entire game is clustered, revealing the structure of the board. Each frame is represented as a Semantic Graph with edges encoding spatial relations between pieces. Changes in the graphs between game states reveal the structure of a “move”. Knowledge from spatial structure and semantic graphs is mapped to FOL descriptions of the moves and used in an Inductive Logic framework to infer the valid moves and other rules of the game. Discovered predicate structures and induced rules are demonstrated for several games with varying board layouts and move structures.</i> </p>
+
+      <div style="white-space: pre-wrap; display: none;" class="bib">
+        @inproceedings{dwibedi2014characterizing,
+        title={Characterizing Predicate Arity and Spatial Structure for Inductive Learning of Game Rules},
+        author={Dwibedi, Debidatta and Mukerjee, Amitabha},
+        booktitle={European Conference on Computer Vision},
+        pages={323--338},
+        year={2014},
+        organization={Springer}
+      }
+    </div>
+  </div>
+</td>
 </tr>
 
 
@@ -452,6 +490,9 @@
 </script>
 <script xml:space="preserve" language="JavaScript">
   hideblock('temporal_abs');
+</script>
+<script xml:space="preserve" language="JavaScript">
+  hideblock('dac_abs');
 </script>
 
 
