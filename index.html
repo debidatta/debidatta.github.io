@@ -38,7 +38,7 @@
 <!-- <link rel="icon" type="image/png" href="seal_icon.png"> -->
 <script type="text/javascript" src="hidebib.js"></script>
 <title>Debidatta Dwibedi</title>
-<meta name="Debidatta Dwibedi&#39;s CMU Homepage" http-equiv="Content-Type" content="Debidatta Dwibedi&#39;s Homepage">
+<meta name="Debidatta Dwibedi" http-equiv="Content-Type" content="Debidatta Dwibedi">
 
 <link href="css" rel="stylesheet" type="text/css">
 <script>
@@ -99,9 +99,8 @@
 
           I want to build intelligent agents that interact with our world in useful ways.
           <br/><br/>
-          My research lies at the intersection of machine learning, computer vision and robotics. Presently, I am working on imitation learning from videos.
+          My research lies at the intersection of machine learning, computer vision and robotics. Presently, I am working on imitation learning from videos and investigating the role time can play in learning better visual models.
           <br/><br/>
-          In the past, I have worked on human-object interaction recognition in videos, object detection, pose estimation, reinforcement learning, game rule learning and image segmentation.
           
         </td></tr>
 
@@ -112,6 +111,43 @@
 
         <tbody><tr><td>
           <h2 id="publications">Publications</h2></td></tr>
+
+          <tr>
+            <td width="42%" valign="top"><a href="assets/tcc.gif"><img src="assets/tcc.gif" width="100%" height="60%" style="border-style: none"></a>
+            </td><td width="58%" valign="top">
+              <p><a href="https://arxiv.org/abs/1904.07846" id="TCC">
+                <heading>Temporal Cycle-Consistency Learning</heading></a><br>
+                Debidatta Dwibedi, <a href="https://people.csail.mit.edu/yusuf/">Yusuf Aytar</a>, <a href="https://cims.nyu.edu/~tompson/">Jonathan Tompson</a>, <a href="https://sermanet.github.io/home/">Pierre Sermanet</a>, <a href="https://www.robots.ox.ac.uk/~az/">Andrew Zisserman</a> <br>
+                <em><a href="http://cvpr2019.thecvf.com/">Computer Vision and Pattern Recognition (CVPR) 2019 </a></em>
+                <br>
+                <br>
+                Self-supervised representation learning based on temporal alignment for fine-grained video understanding tasks.<br>
+
+              </p>
+
+              <div class="paper" id="tcc">
+                <a href="https://arxiv.org/abs/1904.07846">paper</a> |
+                <a href="javascript:toggleblock(&#39;tcc_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;tcc&#39;)" class="togglebib">bibtex</a> |
+                <a href="https://sites.google.com/view/temporal-cycle-consistency"> project </a> |
+                <a href="assets/tcc_poster.pdf"> poster </a>
+
+                <p align="justify"> <i id="tcc_abs" style="display: none;"> We introduce a self-supervised representation learning method based on the task of temporal alignment between videos. The method trains a network using temporal cycle consistency (TCC), a differentiable cycle-consistency loss that can be used to find correspondences across time in multiple videos. The resulting per-frame embeddings can be used to align videos by simply matching frames using the nearest-neighbors in the learned embedding space. 
+
+                To evaluate the power of the embeddings, we densely label the Pouring and Penn Action video datasets for action phases. We show that (i) the learned embeddings enable few-shot classification of these action phases, significantly reducing the supervised training requirements; and (ii) TCC is complementary to other methods of self-supervised learning in videos, such as Shuffle and Learn and Time-Contrastive Networks. The embeddings are also used for a number of applications based on alignment (dense temporal correspondence) between video pairs, including transfer of metadata of synchronized modalities between videos (sounds, temporal semantic labels), synchronized playback of multiple videos, and anomaly detection.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+                 @InProceedings{Dwibedi_2019_CVPR,
+				author = {Dwibedi, Debidatta and Aytar, Yusuf and Tompson, Jonathan and Sermanet, Pierre and Zisserman, Andrew},
+				title = {Temporal Cycle-Consistency Learning},
+				booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+				month = {June},
+				year = {2019}
+				}
+             </div>
+           </div>
+         </td>
+       </tr>
 
           <tr>
             <td width="42%" valign="top"><a href="assets/dac.gif"><img src="assets/dac.gif" width="100%" height="60%" style="border-style: none"></a>
@@ -129,7 +165,8 @@
               <div class="paper" id="dac">
                 <a href="https://arxiv.org/abs/1809.02925">paper</a> |
                 <a href="javascript:toggleblock(&#39;dac_abs&#39;)">abstract</a> |
-                <a shape="rect" href="javascript:togglebib(&#39;dac&#39;)" class="togglebib">bibtex</a>
+                <a shape="rect" href="javascript:togglebib(&#39;dac&#39;)" class="togglebib">bibtex</a> |
+                <a href="https://github.com/google-research/google-research/tree/master/dac">code</a> 
 
                 <p align="justify"> <i id="dac_abs" style="display: none;"> We identify two issues with the family of algorithms based on the Adversarial Imitation Learning framework. The first problem is implicit bias present in the reward functions used in these algorithms. While these biases might work well for some environments, they can also lead to sub-optimal behavior in others. Secondly, even though these algorithms can learn from few expert demonstrations, they require a prohibitively large number of interactions with the environment in order to imitate the expert for many real-world applications. In order to address these issues, we propose a new algorithm called Discriminator-Actor-Critic that uses off-policy Reinforcement Learning to reduce policy-environment interaction sample complexity by an average factor of 10. Furthermore, since our reward function is designed to be unbiased, we can apply our algorithm to many problems without making any task-specific adjustments.</i></p>
 
@@ -323,6 +360,23 @@
 
 <table width="100%" align="center" border="0" cellpadding="20">
   <tbody><tr>
+    <td width="42%" valign="top"><a href="https://drive.google.com/file/d/1tq9PYHqCXqVZdBggjfjfRRoHCv1hoSCa/view"><img src="assets/tcc_luv.gif" width="100%" style="border-style: none"></a>
+    </td><td width="58%" valign="center">
+      <p>
+        <a href="https://drive.google.com/file/d/1tq9PYHqCXqVZdBggjfjfRRoHCv1hoSCa/view"><heading>Temporal Cycle-Consistency Learning</heading></a><br>
+        <em><a href="https://sites.google.com/view/luv2019/home?#h.p_ctb9i6zzj_WP">Learning from Unlabeled Videos</a> at <a href="http://cvpr2019.thecvf.com/">CVPR 2019</a></em>
+      </p>
+      <div class="paper" id="tcc_ws">
+        <a href="https://drive.google.com/file/d/1tq9PYHqCXqVZdBggjfjfRRoHCv1hoSCa/view">paper</a> | <a href="assets/tcc_luv_slides.pdf">slides</a> 
+
+    </div>
+  </td>
+</tr>    
+</tbody>
+</table>
+
+<table width="100%" align="center" border="0" cellpadding="20">
+  <tbody><tr>
     <td width="42%" valign="top"><a href="assets/bivu2018.pdf"><img src="assets/bivu_teaser.png" width="100%" style="border-style: none"></a>
     </td><td width="58%" valign="center">
       <p>
@@ -493,6 +547,9 @@
 </script>
 <script xml:space="preserve" language="JavaScript">
   hideblock('dac_abs');
+</script>
+<script xml:space="preserve" language="JavaScript">
+  hideblock('tcc_abs');
 </script>
 
 
