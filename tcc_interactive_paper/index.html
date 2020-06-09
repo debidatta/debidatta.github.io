@@ -1,0 +1,995 @@
+<!doctype html>
+<head>
+  <title>Temporal Cycle-Consistency Learning</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300' rel='stylesheet' type='text/css'>
+  <meta name="theme-color" content="#1a4067" />
+  <!-- SEO -->
+  <meta property="og:title" content="Temporal Cycle-Consistency Learning" />
+  <meta property="og:type" content="article" />
+  <meta property="og:description" content="Temporal Cycle-Consistency Learning" />
+  <!-- <meta property="og:image" content="https://temporal-cycle-consistency.github.io/assets/img/lmp_logo_rect.png" /> -->
+  <meta property="og:url" content="https://temporal-cycle-consistency.github.io/" />
+  <!-- Twitter Card data -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Temporal Cycle-Consistency Learning" />
+  <meta name="twitter:description" content="" />
+  <meta property="og:site_name" content="Temporal Cycle-Consistency Learning" />
+  <!-- <meta name="twitter:image" content="https://temporal-cycle-consistency.github.io/assets/img/lmp_logo_square.png" /> -->
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<script src="lib/jquery-1.12.4.min.js"></script>
+<!--<script src="lib/mobile-detect.min.js"></script>-->
+<script src="lib/template.v1.js"></script>
+
+<div class="cover">
+  <h1 class="unselectable">Temporal Cycle-Consistency Learning</h1>
+  <video src="assets/mp4/dtw_baseball_pitch.mp4" autoplay loop playsinline muted></video>
+  <div class="hint unselectable">scroll down</div>
+</div>
+
+<dt-article id="dtbody">
+<dt-byline class="l-page transparent"></dt-byline>
+<h1>Temporal Cycle-Consistency Learning</h1>
+<dt-byline class="l-page" id="authors_section">
+<div class="byline">
+  <div class="authors">
+    <div class="author">
+        <a class="name" href="https://debidatta.github.io/">Debidatta Dwibedi</a>
+        <a class="affiliation" href="https://g.co/brain">Google Brain</a>
+    </div>
+    <div class="author">
+        <a class="name" href="http://people.csail.mit.edu/yusuf/">Yusuf Aytar</a>
+        <a class="affiliation" href="https://deepmind.com/">DeepMind</a>
+    </div>
+    <div class="author">
+        <a class="name" href="https://scholar.google.com/citations?user=U_Jw8DUAAAAJ">Jonathan Tompson</a>
+        <a class="affiliation" href="https://g.co/brain">Google Brain</a>
+    </div>
+    <div class="author">
+        <a class="name" href="http://sermanet.github.io">Pierre Sermanet</a>
+        <a class="affiliation" href="https://g.co/brain">Google Brain</a>
+    </div>
+    <div class="author">
+        <a class="name" href="https://www.robots.ox.ac.uk/~az/">Andrew Zisserman</a>
+        <a class="affiliation" href="https://deepmind.com/">DeepMind</a>
+    </div>
+  </div>
+  <div class="date">
+    <div class="month">April 15</div>
+    <div class="year">2019</div>
+  </div>
+  <div class="date">
+    <div class="month" style="color: #0000FF;"><a href="https://arxiv.org/pdf/1904.07846.pdf" target="_blank">PDF</a> | <a href="#citation">Bib</a> </div>
+    <div class="year" style="color: #0000FF;"><a href="https://sites.google.com/view/temporal-cycle-consistency">Project Page</a></div>
+  </div>
+</div>
+</dt-byline>
+</dt-byline>
+<h2>Abstract</h2>
+<p>We introduce a self-supervised representation learning method based on the task of
+temporal alignment between videos. The method trains a network using temporal cycle-consistency (TCC), a differentiable cycle-consistency loss that can be used to find correspondences across time in multiple videos. The resulting per-frame embeddings can be used to align videos by simply matching frames using nearest-neighbors in the learned embedding space.</p>
+<p>To evaluate the power of the embeddings, we densely label the <i>Pouring</i> and <i>Penn Action</i> video datasets for action phases. We show that (i) the learned embeddings enable few-shot classification of these action phases, significantly reducing the supervised training requirements; and (ii) TCC is complementary to other methods of self-supervised learning in videos, such as Shuffle and Learn and Time-Contrastive Networks. The embeddings are also used for a number of applications based on alignment (dense temporal correspondence) between video pairs, including transfer of metadata of synchronized modalities between videos (sounds, temporal semantic labels), synchronized playback of multiple videos, and anomaly detection.</p>
+<div class="figure">
+<video class="b-lazy" data-src="assets/mp4/top.mp4" type="video/mp4" autoplay muted playsinline loop style="display: block; width: 100%;"></video>
+<figcaption>
+Figure 1: TCC embeddings are useful  for temporally fine-grained tasks. In the above video, we retrieve nearest neighbors in the embedding space to frames in the reference video. In spite of many variations, TCC maps semantically similar frames to nearby points in the embedding space.
+</figcaption>
+</div>
+<hr>
+<div class="figure">
+<video class="b-lazy" data-src="assets/mp4/teaser.mp4" type="video/mp4" autoplay muted playsinline loop style="display: block; width: 125%;"></video>
+<figcaption>
+Figure 2. We present a self-supervised representation learning technique called temporal cycle consistency (TCC) learning. It is inspired by the temporal video alignment problem, which refers to the task of finding correspondences across multiple videos despite many factors of variation. The learned representations are useful for fine-grained temporal understanding in videos. Additionally, we can now align multiple videos by simply finding nearest-neighbor frames in the embedding space.
+</figcaption>
+</div>
+<h2>Introduction</h2>
+<p>The world presents us with abundant examples of sequential processes. A plant growing from a seedling to a tree, the daily routine of getting up, going to work and coming back home, or a person pouring themselves a glass of water -- are all examples of events that happen in a particular order. Videos capturing such processes not only contain information about the causal nature of these events, but also provide us with a valuable signal -- the possibility of temporal <i>correspondences</i> lurking across multiple instances of the same process.
+For example, during pouring, one could be reaching for a teapot, a bottle of wine, or a glass of water to pour from. Key moments such as the first touch to the container or the container being lifted from the ground are common to all pouring sequences. These correspondences, which exist in spite of many varying factors like visual changes in viewpoint, scale, container style, the speed of the event, etc., could serve as the link between raw video sequences and high-level temporal abstractions (e.g. phases of actions). In this work we present evidence that suggests the very act of <i>looking for correspondences</i> in sequential data enables the learning of rich and useful representations, particularly suited for fine-grained temporal understanding of videos.</p>
+<p>Temporal reasoning in videos, understanding multiple stages of a process and causal relations between them, is a relatively less studied problem compared to recognizing action categories <dt-cite key="carreira2017quo,soomro2012ucf101"></dt-cite>. Learning representations that can differentiate between states of objects as an action proceeds is critical for perceiving and acting in the world. It would be desirable for a robot tasked with learning to pour drinks to understand each intermediate state of the world as it proceeds with performing the task. Although videos are a rich source of sequential data essential to understanding such state changes, their true potential remains largely untapped. One hindrance in the fine-grained temporal understanding of videos can be an excessive dependence on pure supervised learning methods that require per-frame annotations. It is not only difficult to get every frame labeled in a video because of the manual effort involved, but also it is not entirely clear what are the exhaustive set of labels that need to be collected for fine-grained understanding of videos. Alternatively, we explore self-supervised learning of correspondences between videos across time. We show that the emerging features have strong temporal reasoning capacity, which is demonstrated through tasks such as action phase classification and tracking the progress of an action.</p>
+<p>When frame-by-frame alignment (i.e. supervision) is available, learning correspondences reduces to learning a common embedding space from pairs of aligned frames (e.g. CCA<dt-cite key="anderson1958introduction,andrew2013deep"></dt-cite> and ranking loss<dt-cite key="Sermanet2017TCN"></dt-cite>). However, for most of the real world sequences such frame-by-frame alignment does not exist naturally. One option would be to artificially obtain aligned sequences by recording the same event through multiple cameras<dt-cite key="Sermanet2017TCN,sigurdsson2018actor,revaud2013event"></dt-cite>. Such data collection methods might find it difficult to capture all the variations present naturally in videos in the wild. On the other hand, our self-supervised objective does not need explicit correspondences to align different sequences. It can align significant variations within an action category (e.g. pouring liquids, or baseball pitch). Interestingly, the embeddings that emerge from learning the alignment prove to be useful for fine-grained temporal understanding of videos. More specifically, we learn an embedding space that maximizes one-to-one mappings (i.e. cycle-consistent points) across pairs of video sequences within an action category. In order to do that, we introduce two differentiable versions of cycle consistency computation which can be optimized by conventional gradient-based optimization methods. Further details of the method will be explained in section <a href="#cycle_consistent_representation_learning">Cycle Consistent Representation Learning</a>.</p>
+<p>The main contribution of this paper is a new self-supervised training method, referred to as temporal cycle consistency (TCC) learning, that learns representations by aligning video sequences of the same action. We compare TCC representations against features from existing self-supervised video representation methods <dt-cite key="Sermanet2017TCN,misra2016shuffle"></dt-cite> and supervised learning, for the tasks of action phase classification and continuous progress tracking of an action. Our approach provides significant performance boosts when there is a lack of labeled data. We also collect per-frame annotations of Penn Action<dt-cite key="zhang2013actemes"></dt-cite> and Pouring<dt-cite key="Sermanet2017TCN"></dt-cite> datasets that we will release publicly to facilitate evaluation of fine-grained video understanding tasks.</p>
+<h2>Related Work</h2>
+<p><strong>Cycle consistency</strong>. Validating good matches by cycling between two or more samples is a commonly used technique in computer vision. It has been applied successfully for tasks like co-segmentation<dt-cite key="wang2014unsupervised,wang2013image"></dt-cite>, structure from motion <dt-cite key="zach2010disambiguating,wilson2013network"></dt-cite>, and image matching<dt-cite key="zhou2015multi,zhou2016learning,zhou2015flowweb"></dt-cite>.<br>
+For instance, FlowWeb<dt-cite key="zhou2015flowweb"></dt-cite> optimizes globally-consistent
+dense correspondences using the cycle consistent flow fields between all pairs of images in a collection, whereas Zhou et al.<dt-cite key="zhou2015multi"></dt-cite> approaches a similar task by formulating it as a low-rank matrix recovery problem and solves it through fast alternating minimization. These methods learn robust dense correspondences on top of fixed feature representations (e.g. SIFT, deep features, etc.) by enforcing cycle consistency and/or spatial constraints between the images. Our method differs from these approaches in that TCC is a self-supervised representation learning method which learns embedding spaces that are optimized to give good correspondences. Furthermore we address a temporal correspondence problem rather than a spatial one.
+Zhou et al.<dt-cite key="zhou2016learning"></dt-cite> learn to align multiple images using the supervision from 3D guided cycle-consistency by leveraging the initial correspondences that are available between multiple renderings of a 3D model, whereas we don't assume any given correspondences. Another way of using cyclic relations is to directly learn bi-directional transformation functions between multiple spaces such as CycleGANs<dt-cite key="zhu2017unpaired"></dt-cite> for learning image transformations, and CyCADA<dt-cite key="hoffman2017cycada"></dt-cite> for domain adaptation. Unlike these approaches we don't have multiple domains, and we can't learn transformation functions between all pairs of sequences. Instead we learn a joint embedding space in which the Euclidean distance defines the mapping across the frames of multiple sequences.  Similar to us, Aytar et al.<dt-cite key="aytar2018playing"></dt-cite> applies cycle-consistency between temporal sequences, however they use it as a validation tool for hyper-parameter optimization of learned representations for the end goal of imitation learning. Unlike our approach, their cycle-consistency measure is non-differentiable and hence can't be directly used for representation learning.</p>
+<p><strong>Video alignment</strong>. When we have synchronization information (e.g. multiple cameras recording the same event) then learning a mapping between multiple video sequences can be accomplished by using existing methods such as Canonical Correlation Analysis (CCA)<dt-cite key="anderson1958introduction,andrew2013deep"></dt-cite>, ranking<dt-cite key="Sermanet2017TCN"></dt-cite> or match-classification<dt-cite key="arandjelovic2017look"></dt-cite> objectives. For instance TCN<dt-cite key="Sermanet2017TCN"></dt-cite> and circulant temporal encoding<dt-cite key="revaud2013event"></dt-cite> align multiple views of the same event, whereas Sigurdsson et al.<dt-cite key="sigurdsson2018actor"></dt-cite> learns to align first and third person videos. Although we have a similar objective, these methods are not suitable for our task as we cannot assume any given correspondences between different videos.</p>
+<p><strong>Action localization and parsing</strong>. As action recognition is quite popular in the computer vision community, many studies
+<dt-cite key="wang2016temporal,sigurdsson2017asynchronous,zhao2017temporal,girdhar2017actionvlad,yeung2018every"></dt-cite> explore efficient deep architectures for action recognition and localization in videos.  Past work has also explored parsing of fine-grained actions in videos <dt-cite key="pirsiavash2014parsing,lan2015action,lea2016segmental"></dt-cite> while some others
+<dt-cite key="shechtman2007matching,del2015articulated,sener2015unsupervised,sener2018unsupervised"></dt-cite> discover sub-activities without explicit supervision of temporal boundaries. <dt-cite key="heidarivincheh2018action"></dt-cite> learns a supervised regression model with voting to predict the completion of an action, and <dt-cite key="Alayrac16unsupervised"></dt-cite> discovers key events in an unsuperivsed manner using a weak association between videos and text instructions.
+However all these methods heavily rely on existing deep image <dt-cite key="he2016deep,simonyan2014very"></dt-cite> or spatio-temporal<dt-cite key="wang2013action"></dt-cite> features, whereas we learn our representation from scratch using raw video sequences.</p>
+<p><strong>Soft nearest neighbours</strong>. The differentiable or soft formulation for nearest-neighbors is a commonly known method <dt-cite key="goldberger2005neighbourhood"></dt-cite>. This formulation has recently found application in metric learning for few-shot learning<dt-cite key="snell2017prototypical,movshovitz2017no,rocco2018neighbourhood"></dt-cite>. We also make use of soft nearest neighbor formulation as a component in our differentiable cycle-consistency computation.</p>
+<p><strong>Self-supervised representations.</strong> There has been significant progress in learning from images and videos without requiring class or temporal segmentation labels. Instead of labels, self-supervised learning methods use signals such as temporal order<dt-cite key="misra2016shuffle,fernando2017self"></dt-cite>, consistency across viewpoints and/or temporal neighbors<dt-cite key="Sermanet2017TCN"></dt-cite>, classifying arbitrary temporal segments<dt-cite key="hyvarinen2016unsupervised"></dt-cite>, temporal distance classification within or across modalities<dt-cite key="aytar2018playing"></dt-cite>, spatial permutation of patches<dt-cite key="doersch2015unsupervised,anoop33deeppermnet"></dt-cite>, visual similarity<dt-cite key="sanakoyeu2018deep"></dt-cite> or a combination of such signals<dt-cite key="doersch2017multi"></dt-cite>.
+While most of these approaches optimize each sample independently, TCC jointly optimizes over two sequences at a time, potentially capturing more variations in the embedding space. Additionally, we show that TCC yields best results when combined with some of the unsupervised losses above.</p>
+<h2>Cycle Consistent Representation Learning</h2>
+<div id="cycle_consistent_representation_learning"></div>
+<div class="figure" id="cycle">
+<video class="b-lazy" data-src="assets/mp4/teaser_small.mp4" type="video/mp4" autoplay muted playsinline loop style="display: block; width: 80%;"></video>
+<figcaption>
+Figure 3: <strong>Cycle-consistent representation learning.</strong> We show two example video sequences encoded in an example embedding space. If we use nearest neighbors for matching, one point (shown in black) is <i>cycling back to itself</i> while another one (shown in red) is not. Our target is to learn an embedding space where maximum number of points can cycle back to themselves. We achieve it by minimizing the cycle consistency error (shown in red dotted line) for each point in every pair of sequences.
+</figcaption>
+</div>
+<div class="figure" id="soft_cycle_consistency">
+<img src="assets/fig/method.png" style="margin: 0; width: 125%;"/>
+</div>
+<div class="figure">
+<video class="b-lazy" data-src="assets/mp4/method.mp4" type="video/mp4" autoplay muted playsinline loop style="display: block; width: 125%;"></video>
+</figcaption>
+</div>
+<p>Figure 4: <strong>Temporal cycle consistency</strong>. The embedding sequences <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.22222em;">V</span></span></span></span> are obtained by encoding video sequences <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05764em;">S</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">T</span></span></span></span> with the encoder network <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>ϕ</mi></mrow><annotation encoding="application/x-tex">\phi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit">ϕ</span></span></span></span>, respectively. For the selected point <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span>, soft nearest neighbor computation and cycling back to <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span> again is demonstrated visually. Finally the normalized distance between the index <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.65952em;"></span><span class="strut bottom" style="height:0.65952em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">i</span></span></span></span> and cycling back distribution <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>N</mi><mo>(</mo><mi>μ</mi><mo separator="true">,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>)</mo></mrow><annotation encoding="application/x-tex">N(\mu,\sigma^2)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.8141079999999999em;"></span><span class="strut bottom" style="height:1.064108em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span><span class="mopen">(</span><span class="mord mathit">μ</span><span class="mpunct">,</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">σ</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">)</span></span></span></span> (which is fitted to <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05278em;">β</span></span></span></span>) is minimized.</p>
+<p>The core contribution of this work is a self-supervised approach to learn an embedding space where two similar video sequences can be aligned temporally. More specifically, we intend to maximize the number of points that can be mapped one-to-one between two sequences by using the minimum distance in the learned embedding space. We can achieve such an objective by maximizing the number of cycle-consistent frames between two sequences (see <a href="#cycle">Figure 3</a>). However, cycle-consistency computation is typically not a differentiable procedure. In order to facilitate learning such an embedding space using back-propagation, we introduce two differentiable versions of the <i>cycle-consistency loss</i>, which we describe in detail below.</p>
+<p>Given any frame <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>s</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">s_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">s</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> in a sequence <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>S</mi><mo>=</mo><mo>{</mo><msub><mi>s</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>s</mi><mn>2</mn></msub><mo separator="true">,</mo><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mo separator="true">,</mo><msub><mi>s</mi><mi>N</mi></msub><mo>}</mo></mrow><annotation encoding="application/x-tex">S=\{s_1,s_2,...,s_N\}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05764em;">S</span><span class="mrel">=</span><span class="mopen">{</span><span class="mord"><span class="mord mathit">s</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">1</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord"><span class="mord mathit">s</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mpunct">,</span><span class="mord"><span class="mord mathit">s</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">}</span></span></span></span>, the embedding is computed as <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub><mo>=</mo><mi>ϕ</mi><mo>(</mo><msub><mi>s</mi><mi>i</mi></msub><mo separator="true">;</mo><mi>θ</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">u_i = \phi(s_i;\theta)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord mathit">ϕ</span><span class="mopen">(</span><span class="mord"><span class="mord mathit">s</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">;</span><span class="mord mathit" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span></span></span></span>, where <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>ϕ</mi></mrow><annotation encoding="application/x-tex">\phi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit">ϕ</span></span></span></span> is the neural network encoder parameterized by <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>θ</mi></mrow><annotation encoding="application/x-tex">\theta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.69444em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.02778em;">θ</span></span></span></span>. For the following sections, assume we are given two video sequences <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05764em;">S</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">T</span></span></span></span>, with lengths <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>M</mi></mrow><annotation encoding="application/x-tex">M</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">M</span></span></span></span>, respectively. Their embeddings are computed as <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi><mo>=</mo><mo>{</mo><msub><mi>u</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>u</mi><mn>2</mn></msub><mo separator="true">,</mo><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mo separator="true">,</mo><msub><mi>u</mi><mi>N</mi></msub><mo>}</mo></mrow><annotation encoding="application/x-tex">U=\{u_1,u_2,...,u_N\}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span><span class="mrel">=</span><span class="mopen">{</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">1</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mpunct">,</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">}</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>V</mi><mo>=</mo><mo>{</mo><msub><mi>v</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>v</mi><mn>2</mn></msub><mo separator="true">,</mo><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mo separator="true">,</mo><msub><mi>v</mi><mi>M</mi></msub><mo>}</mo></mrow><annotation encoding="application/x-tex">V=\{v_1,v_2,...,v_M\}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.22222em;">V</span><span class="mrel">=</span><span class="mopen">{</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">1</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mpunct">,</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">M</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">}</span></span></span></span> such that <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub><mo>=</mo><mi>ϕ</mi><mo>(</mo><msub><mi>s</mi><mi>i</mi></msub><mo separator="true">;</mo><mi>θ</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">u_i = \phi(s_i;\theta)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord mathit">ϕ</span><span class="mopen">(</span><span class="mord"><span class="mord mathit">s</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">;</span><span class="mord mathit" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>v</mi><mi>i</mi></msub><mo>=</mo><mi>ϕ</mi><mo>(</mo><msub><mi>t</mi><mi>i</mi></msub><mo separator="true">;</mo><mi>θ</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">v_i = \phi(t_i;\theta)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord mathit">ϕ</span><span class="mopen">(</span><span class="mord"><span class="mord mathit">t</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">;</span><span class="mord mathit" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span></span></span></span>.</p>
+<h3>Cycle-consistency</h3>
+<div id="cycle_consistency"></div>
+<p>In order to check if a point <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub><mo>∈</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">u_i \in U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">∈</span><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span> is cycle consistent, we first determine its nearest neighbor, <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>v</mi><mi>j</mi></msub><mo>=</mo><mi>arg</mi><msub><mi>min</mi><mrow><mi>v</mi><mo>∈</mo><mi>V</mi></mrow></msub><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi><msub><mi>u</mi><mi>i</mi></msub><mo>−</mo><mi>v</mi><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">v_j = \arg \min_{v \in V} ||u_i-v||</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1.036108em;vertical-align:-0.286108em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mop">ar<span style="margin-right:0.01389em;">g</span></span><span class="mop"><span class="mop">min</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="mrel">∈</span><span class="mord mathit" style="margin-right:0.22222em;">V</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span></span></span></span>. We then repeat the process to find the nearest neighbor of <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>v</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">v_j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.716668em;vertical-align:-0.286108em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span>, i.e. <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>k</mi></msub><mo>=</mo><mi>arg</mi><msub><mi>min</mi><mrow><mi>u</mi><mo>∈</mo><mi>U</mi></mrow></msub><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi><msub><mi>v</mi><mi>j</mi></msub><mo>−</mo><mi>u</mi><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">u_k = \arg \min_{u \in U} ||v_j-u||</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1.036108em;vertical-align:-0.286108em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mop">ar<span style="margin-right:0.01389em;">g</span></span><span class="mop"><span class="mop">min</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit">u</span><span class="mrel">∈</span><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord mathit">u</span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span></span></span></span>. The point <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> is <i>cycle-consistent</i> if and only if <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>i</mi><mo>=</mo><mi>k</mi></mrow><annotation encoding="application/x-tex">i=k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.69444em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">i</span><span class="mrel">=</span><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span></span>, in other words if the point <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> cycles back to itself.
+<a href="#cycle">Figure 3</a> provides positive and negative examples of cycle consistent points in an embedding space.
+We can learn a good embedding space by maximizing the number of cycle-consistent points for any pair of sequences. However that would require a differentiable version of cycle-consistency measure, two of which we introduce below.</p>
+<h3>Cycle-back Classification</h3>
+<p>We first compute the soft nearest neighbor <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover></mrow><annotation encoding="application/x-tex">\tilde{v}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.6678599999999999em;"></span><span class="strut bottom" style="height:0.6678599999999999em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> of <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.22222em;">V</span></span></span></span>, then figure out the nearest neighbor of <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover></mrow><annotation encoding="application/x-tex">\tilde{v}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.6678599999999999em;"></span><span class="strut bottom" style="height:0.6678599999999999em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> back in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span>. We consider each frame in the first sequence <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span> to be a separate class and our task of checking for cycle-consistency reduces to classification of the nearest neighbor correctly. The logits are calculated using the distances between <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover></mrow><annotation encoding="application/x-tex">\tilde{v}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.6678599999999999em;"></span><span class="strut bottom" style="height:0.6678599999999999em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> and any <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>k</mi></msub><mo>∈</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">u_k \in U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">∈</span><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span>, and the ground truth label <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>y</mi></mrow><annotation encoding="application/x-tex">y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.03588em;">y</span></span></span></span> are all zeros except for the <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>i</mi><mrow><mi>t</mi><mi>h</mi></mrow></msup></mrow><annotation encoding="application/x-tex">i^{th}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.849108em;"></span><span class="strut bottom" style="height:0.849108em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">i</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathit">t</span><span class="mord mathit">h</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> index which is set to 1.</p>
+<p>For the selected point <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>, we use the softmax function to define its soft nearest neighbor <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover></mrow><annotation encoding="application/x-tex">\tilde{v}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.6678599999999999em;"></span><span class="strut bottom" style="height:0.6678599999999999em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> as:</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover><mo>=</mo><msubsup><mo>∑</mo><mi>j</mi><mi>M</mi></msubsup><msub><mi>α</mi><mi>j</mi></msub><msub><mi>v</mi><mi>j</mi></msub><mo separator="true">,</mo><mspace width="1em"></mspace><mi>w</mi><mi>h</mi><mi>e</mi><mi>r</mi><mi>e</mi><mspace width="1em"></mspace><msub><mi>α</mi><mi>j</mi></msub><mo>=</mo><mfrac><mrow><msup><mi>e</mi><mrow><mo>−</mo><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi><msub><mi>u</mi><mi>i</mi></msub><mo>−</mo><msub><mi>v</mi><mi>j</mi></msub><mi mathvariant="normal">∣</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow></msup></mrow><mrow><msubsup><mo>∑</mo><mi>k</mi><mi>M</mi></msubsup><msup><mi>e</mi><mrow><mo>−</mo><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi><msub><mi>u</mi><mi>i</mi></msub><mo>−</mo><msub><mi>v</mi><mi>k</mi></msub><mi mathvariant="normal">∣</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">\tilde{v} = \sum_j^M \alpha_j v_j, \quad where \quad \alpha_j = \frac{e^{-||u_i-v_j||^2}}{\sum_k^M e^{-||u_i-v_k||^2}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:1.227725em;"></span><span class="strut bottom" style="height:1.964697em;vertical-align:-0.736972em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mop"><span class="op-symbol small-op mop" style="top:-0.0000050000000000050004em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span style="top:-0.364em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">M</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit" style="margin-right:0.0037em;">α</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.0037em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mspace quad"></span><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="mord mathit">h</span><span class="mord mathit">e</span><span class="mord mathit" style="margin-right:0.02778em;">r</span><span class="mord mathit">e</span><span class="mord mspace quad"></span><span class="mord"><span class="mord mathit" style="margin-right:0.0037em;">α</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.0037em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord reset-textstyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.5269649999999999em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mop"><span class="op-symbol small-op mop" style="top:0.074995em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span style="top:-0.364em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">M</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit">e</span><span class="vlist"><span style="top:-0.3574928571428571em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord scriptscriptstyle cramped"><span class="mord">−</span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.31472em;margin-right:0.1em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.34963999999999995em;margin-right:0.1em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.289em;margin-right:0.1em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span style="top:-0.22999999999999998em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.394em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord"><span class="mord mathit">e</span><span class="vlist"><span style="top:-0.47143571428571435em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle uncramped"><span class="mord scriptscriptstyle uncramped"><span class="mord">−</span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.31472em;margin-right:0.1em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.31472000000000006em;margin-right:0.1em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.363em;margin-right:0.1em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span></span></span></span>     (1)</p>
+<p>and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.43056em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.0037em;">α</span></span></span></span> is the the similarity distribution which signifies the proximity between <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> and each <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>v</mi><mi>j</mi></msub><mo>∈</mo><mi>V</mi></mrow><annotation encoding="application/x-tex">v_j \in V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">∈</span><span class="mord mathit" style="margin-right:0.22222em;">V</span></span></span></span>. And then we solve the <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span></span> class (i.e.\ number of frames in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span>) classification problem where the logits are <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>x</mi><mi>k</mi></msub><mo>=</mo><mo>−</mo><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover><mo>−</mo><msub><mi>u</mi><mi>k</mi></msub><mi mathvariant="normal">∣</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">x_k = -||\tilde{v} - u_k||^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.8141079999999999em;"></span><span class="strut bottom" style="height:1.064108em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">x</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord">−</span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> and the predicted labels are <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>y</mi></mrow><mo>^</mo></mover><mo>=</mo><mi>s</mi><mi>o</mi><mi>f</mi><mi>t</mi><mi>m</mi><mi>a</mi><mi>x</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">\hat{y} = softmax(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">y</span></span></span><span style="top:0em;margin-left:0.11112em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>^</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord mathit">s</span><span class="mord mathit">o</span><span class="mord mathit" style="margin-right:0.10764em;">f</span><span class="mord mathit">t</span><span class="mord mathit">m</span><span class="mord mathit">a</span><span class="mord mathit">x</span><span class="mopen">(</span><span class="mord mathit">x</span><span class="mclose">)</span></span></span></span>. Finally we optimize the cross-entropy loss as follows:</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>c</mi><mi>b</mi><mi>c</mi></mrow></msub><mo>=</mo><mo>−</mo><msubsup><mo>∑</mo><mi>j</mi><mi>N</mi></msubsup><msub><mi>y</mi><mi>j</mi></msub><mi>log</mi><mo>(</mo><msub><mover accent="true"><mrow><mi>y</mi></mrow><mo>^</mo></mover><mi>j</mi></msub><mo>)</mo></mrow><annotation encoding="application/x-tex">L_{cbc} = -\sum_j^N y_j \log(\hat{y}_j)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.8423309999999999em;"></span><span class="strut bottom" style="height:1.278449em;vertical-align:-0.436118em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit">c</span><span class="mord mathit">b</span><span class="mord mathit">c</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord">−</span><span class="mop"><span class="op-symbol small-op mop" style="top:-0.0000050000000000050004em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span style="top:-0.364em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">y</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mopen">(</span><span class="mord"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">y</span></span></span><span style="top:0em;margin-left:0.11112em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>^</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">)</span></span></span></span>     (2)</p>
+<h3>Cycle-back Regression</h3>
+<p>Although cycle-back classification defines a differentiable cycle-consistency loss function, it has no notion of how close or far in time the point to which we cycled back is. We want to penalize the model less if we are able to cycle back to closer neighbors as opposed to the other frames that are farther away in time. In order to incorporate temporal proximity in our loss, we introduce cycle-back regression. A visual description of the entire process is shown in <a href="#soft_cycle_consistency">Figure 4</a>. Similar to the previous method first we compute the soft nearest neighbor <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover></mrow><annotation encoding="application/x-tex">\tilde{v}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.6678599999999999em;"></span><span class="strut bottom" style="height:0.6678599999999999em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> of <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.22222em;">V</span></span></span></span>. Then we compute the similarity vector <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05278em;">β</span></span></span></span> that defines the proximity between <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover></mrow><annotation encoding="application/x-tex">\tilde{v}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.6678599999999999em;"></span><span class="strut bottom" style="height:0.6678599999999999em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> and each <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>k</mi></msub><mo>∈</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">u_k \in U</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">∈</span><span class="mord mathit" style="margin-right:0.10903em;">U</span></span></span></span> as:</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>β</mi><mi>k</mi></msub><mo>=</mo><mfrac><mrow><msup><mi>e</mi><mrow><mo>−</mo><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover><mo>−</mo><msub><mi>u</mi><mi>k</mi></msub><mi mathvariant="normal">∣</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow></msup></mrow><mrow><msubsup><mo>∑</mo><mi>j</mi><mi>N</mi></msubsup><msup><mi>e</mi><mrow><mo>−</mo><mi mathvariant="normal">∣</mi><mi mathvariant="normal">∣</mi><mover accent="true"><mrow><mi>v</mi></mrow><mo>~</mo></mover><mo>−</mo><msub><mi>u</mi><mi>j</mi></msub><mi mathvariant="normal">∣</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">\beta_k = \frac{e^{-||\tilde{v}-u_k||^2}}{\sum_j^N e^{-||\tilde{v} - u_j||^2}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:1.1518199999999998em;"></span><span class="strut bottom" style="height:2.065772em;vertical-align:-0.9139519999999999em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.05278em;">β</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.05278em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord reset-textstyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.606725em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mop"><span class="op-symbol small-op mop" style="top:0.074995em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span style="top:-0.364em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit">e</span><span class="vlist"><span style="top:-0.47143571428571435em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord scriptscriptstyle cramped"><span class="mord">−</span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.31472000000000006em;margin-right:0.1em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.289em;margin-right:0.1em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span style="top:-0.22999999999999998em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.394em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord"><span class="mord mathit">e</span><span class="vlist"><span style="top:-0.363em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle uncramped"><span class="mord scriptscriptstyle uncramped"><span class="mord">−</span><span class="mord mathrm">∣</span><span class="mord mathrm">∣</span><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">v</span></span></span><span style="top:-0.35em;margin-left:0.05556em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>~</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.34963999999999995em;margin-right:0.1em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathrm">∣</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.363em;margin-right:0.1em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptscriptstyle scriptscriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span></span></span></span>     (3)</p>
+<p>Note that <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05278em;">β</span></span></span></span> is a discrete distribution of similarities over time and we expect it to show a peaky behavior around the <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>i</mi><mrow><mi>t</mi><mi>h</mi></mrow></msup></mrow><annotation encoding="application/x-tex">i^{th}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.849108em;"></span><span class="strut bottom" style="height:0.849108em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">i</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathit">t</span><span class="mord mathit">h</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> index in time. Therefore, we impose a Gaussian prior on <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05278em;">β</span></span></span></span> by minimizing the normalized squared distance <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mfrac><mrow><mi mathvariant="normal">∣</mi><mi>i</mi><mo>−</mo><mi>μ</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow><mrow><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">\frac{|i-\mu|^2}{\sigma^2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:1.06132em;"></span><span class="strut bottom" style="height:1.40632em;vertical-align:-0.345em;"></span><span class="base textstyle uncramped"><span class="mord reset-textstyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.345em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">σ</span><span class="vlist"><span style="top:-0.289em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span style="top:-0.22999999999999998em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.485em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathrm">∣</span><span class="mord mathit">i</span><span class="mbin">−</span><span class="mord mathit">μ</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.363em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span></span></span></span> as our objective. We enforce <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05278em;">β</span></span></span></span> to be more peaky around <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.65952em;"></span><span class="strut bottom" style="height:0.65952em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">i</span></span></span></span> by applying additional variance regularization. We define our final objective as:</p>
+<p><a name="eq:4"></a>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mrow><mi>c</mi><mi>b</mi><mi>r</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi mathvariant="normal">∣</mi><mi>i</mi><mo>−</mo><mi>μ</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow><mrow><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac><mo>+</mo><mi>λ</mi><mi>log</mi><mo>(</mo><mi>σ</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">L_{cbr} = \frac{|i-\mu|^2}{\sigma^2} + \lambda \log(\sigma)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:1.06132em;"></span><span class="strut bottom" style="height:1.40632em;vertical-align:-0.345em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit">c</span><span class="mord mathit">b</span><span class="mord mathit" style="margin-right:0.02778em;">r</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord reset-textstyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.345em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">σ</span><span class="vlist"><span style="top:-0.289em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span style="top:-0.22999999999999998em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.485em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathrm">∣</span><span class="mord mathit">i</span><span class="mbin">−</span><span class="mord mathit">μ</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.363em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span><span class="mbin">+</span><span class="mord mathit">λ</span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mopen">(</span><span class="mord mathit" style="margin-right:0.03588em;">σ</span><span class="mclose">)</span></span></span></span>     (4)</p>
+<p>where <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>μ</mi><mo>=</mo><msubsup><mo>∑</mo><mrow><mi>k</mi></mrow><mi>N</mi></msubsup><msub><mi>β</mi><mi>k</mi></msub><mo>∗</mo><mi>k</mi></mrow><annotation encoding="application/x-tex">\mu = \sum_{k}^N \beta_k * k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.8423309999999999em;"></span><span class="strut bottom" style="height:1.142341em;vertical-align:-0.30001em;"></span><span class="base textstyle uncramped"><span class="mord mathit">μ</span><span class="mrel">=</span><span class="mop"><span class="op-symbol small-op mop" style="top:-0.0000050000000000050004em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span></span><span style="top:-0.364em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit" style="margin-right:0.05278em;">β</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.05278em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">∗</span><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>σ</mi><mn>2</mn></msup><mo>=</mo><msubsup><mo>∑</mo><mrow><mi>k</mi></mrow><mi>N</mi></msubsup><msub><mi>β</mi><mi>k</mi></msub><mo>∗</mo><mo>(</mo><mi>k</mi><mo>−</mo><mi>μ</mi><msup><mo>)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\sigma^2 = \sum_{k}^N \beta_k * (k-\mu)^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.8423309999999999em;"></span><span class="strut bottom" style="height:1.142341em;vertical-align:-0.30001em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">σ</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mop"><span class="op-symbol small-op mop" style="top:-0.0000050000000000050004em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span></span><span style="top:-0.364em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit" style="margin-right:0.05278em;">β</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.05278em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">∗</span><span class="mopen">(</span><span class="mord mathit" style="margin-right:0.03148em;">k</span><span class="mbin">−</span><span class="mord mathit">μ</span><span class="mclose"><span class="mclose">)</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>, and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.69444em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">λ</span></span></span></span> is the regularization weight. Note that we minimize the log of variance as using just the variance is more prone to numerical instabilities. All these formulations are differentiable and can conveniently be optimized with conventional back-propagation.</p>
+<h3>Implementation details</h3>
+<div id="implementation_details"></div>
+<p><strong>Training Procedure</strong>. Our self-supervised representation is learned by minimizing the cycle-consistency loss for all the pair of sequences in the training set. Given a sequence pair, their frames are embedded using the encoder network and we optimize cycle consistency losses for randomly selected frames within each sequence until convergence. We used Tensorflow<dt-cite key="abadi2016tensorflow"></dt-cite> for all our experiments.</p>
+<p><strong>Encoding Network</strong>.  All the frames in a given video sequence are resized to <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>2</mn><mn>2</mn><mn>4</mn><mo>×</mo><mn>2</mn><mn>2</mn><mn>4</mn></mrow><annotation encoding="application/x-tex">224 \times 224</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">2</span><span class="mord mathrm">2</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">2</span><span class="mord mathrm">2</span><span class="mord mathrm">4</span></span></span></span>. When using ImageNet pretrained features, we use ResNet-50<dt-cite key="he2016deep"></dt-cite> architecture to extract features from the output of <i>Conv4c</i> layer. The size of the extracted convolutional features are <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn><mn>4</mn><mo>×</mo><mn>1</mn><mn>4</mn><mo>×</mo><mn>1</mn><mn>0</mn><mn>2</mn><mn>4</mn></mrow><annotation encoding="application/x-tex">14 \times 14 \times 1024</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">1</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">1</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">1</span><span class="mord mathrm">0</span><span class="mord mathrm">2</span><span class="mord mathrm">4</span></span></span></span>. Because of the size of the datasets, when training from scratch we use a smaller model along the lines of VGG-M<dt-cite key="chatfield2014return"></dt-cite>. This network takes input at the same resolution as ResNet-50 but is only 7 layers deep. The convolutional features produced by this base network are of the size <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn><mn>4</mn><mo>×</mo><mn>1</mn><mn>4</mn><mo>×</mo><mn>5</mn><mn>1</mn><mn>2</mn></mrow><annotation encoding="application/x-tex">14 \times 14 \times 512</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">1</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">1</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">5</span><span class="mord mathrm">1</span><span class="mord mathrm">2</span></span></span></span>. These features are provided as input to our embedder network (presented in <a href="#tab:archiecture">Table 1</a>). We stack the features of any given frame and its <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.69444em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span></span> context frames along the dimension of time. This is followed by 3D convolutions for aggregating temporal information. We reduce the dimensionality by using 3D max-pooling followed by two fully connected layers. Finally, we use a linear projection to get a 128-dimensional embedding for each frame. More details of the architecture are presented in the supplementary material.</p>
+<div class="figure" id="tab:archiecture">
+<img src="assets/fig/table1.png" style="margin: 0; width: 80%;"/>
+<figcaption>
+Table 1: Architecture of the embedding network.
+</figcaption>
+</div>
+<h2>Datasets and Evaluation</h2>
+<div class="figure" id="annotation">
+<img src="assets/fig/annotation.png" style="margin: 0; width: 120%;"/>
+<figcaption>
+Figure 5: <strong>Example labels</strong> for the actions `Baseball Pitch' (top row) and `Pouring' (bottom row).
+The key events are shown in boxes below the frame (e.g. `Hand touches bottle'),
+and each frame in between two key events has a phase label (e.g. `Lifting bottle').
+</figcaption>
+</div>
+<p>We validate the usefulness of our representation learning technique on
+two datasets: (i) <i>Pouring</i><dt-cite key="Sermanet2017TCN"></dt-cite>; and (ii)
+<i>Penn Action</i><dt-cite key="zhang2013actemes"></dt-cite>. These datasets both contain
+videos of humans performing actions,
+and provide us with collections of videos where dense alignment can be
+performed.
+While <i>Pouring</i> focuses
+more on the objects being interacted with, <i>Penn Action</i>
+focuses on humans doing sports or exercise.</p>
+<p><strong>Annotations.</strong> For evaluation purposes, we add two types of labels to the video frames of
+these datasets: key events and phases.
+Densely labeling each frame in a video is a difficult and
+time-consuming task. Labelling only <i>key events</i> both reduces the number of frames
+that need to be annotated, and also reduces
+the ambiguity of the task (and thus the
+disagreement between annotators). For example, annotators agree more
+about the frame when the golf club hits the ball (a key event) than when  the
+golf club is at a certain angle. The <i>phase</i> is the period between two key events, and all frames in the
+period have the same phase label. It is similar to tasks proposed in<dt-cite key="kuehne2014language,bojanowski2014weakly,damen2018scaling"></dt-cite>. Examples of key events and phases are shown in
+<a href="#annotation">Figure 5</a>,
+and <a href="#tab:dataset">Table 2</a> gives the complete list for all the actions we consider.</p>
+<p>We use all the real videos from the <i>Pouring</i> dataset, and all but two action categories
+in <i>Penn Action</i>. We do not use
+<i>Strumming guitar</i> and <i>Jumping rope</i> because
+it is difficult to define unambiguous key events for these. We
+use the train/val splits of the original
+datasets<dt-cite key="Sermanet2017TCN,zhang2013actemes"></dt-cite>.
+We will publicly release these new annotations.</p>
+<div class="figure" id="tab:dataset">
+<img src="assets/fig/table2.png" style="margin: 0; width: 125%;"/>
+<figcaption>
+Table 2: List of all key events in each dataset. Note that each action has a <i>Start</i> event and <i>End</i> event in addition to the key events above.
+</figcaption>
+</div>
+<h3>Evaluation</h3>
+<div id="metrics"></div>
+<p>We use three evaluation measures computed on the validation set. These metrics evaluate the model on fine-grained temporal understanding of a given action.
+Note, the networks are first trained on the training set and then frozen. SVM classifiers and linear regressors are trained on the features from the networks, with no additional fine-tuning of the networks.
+For all measures a higher score implies a better model.</p>
+<p><strong>1. Phase classification accuracy:</strong> is the per frame phase classification accuracy.
+This is implemented by training a SVM classifier on  the phase labels for each frame of the
+training data.</p>
+<p><strong>2. Phase progression:</strong>
+measures how well the <i>progress</i> of a process or action is captured by the embeddings. We first define
+an approximate measure of progress through a phase
+as the difference in time-stamps between any
+given frame and each key event. This is normalized by the number of
+frames present in that video. Similar definitions can be found in recent literature <dt-cite key="ma2016learning,becattini2017done,heidarivincheh2018action"></dt-cite>.
+We use a linear regressor on the features to predict the phase progression values. It is computed as the  the average <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.00773em;">R</span></span></span></span>-squared measure (coefficient of
+determination)<dt-cite key="wiki:rsquared"></dt-cite>, given by:</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup><mo>(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mrow><msub><mi>y</mi><mi>i</mi></msub></mrow><mo>^</mo></mover><msup><mo>)</mo><mn>2</mn></msup></mrow><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup><mo>(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mrow><mi>y</mi></mrow><mo>¯</mo></mover><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">R^2 = 1- \frac{\sum_{i=1}^n (y_i - \hat{y_i})^2}{\sum_{i=1}^n (y_i - \bar{y})^2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:1.096327em;"></span><span class="strut bottom" style="height:1.651334em;vertical-align:-0.555007em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.00773em;">R</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mrel">=</span><span class="mord mathrm">1</span><span class="mbin">−</span><span class="mord reset-textstyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.34500000000000003em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mop"><span class="op-symbol small-op mop" style="top:0.074995em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord scriptscriptstyle cramped"><span class="mord mathit">i</span><span class="mrel">=</span><span class="mord mathrm">1</span></span></span></span><span style="top:-0.364em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit">n</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">y</span><span class="vlist"><span style="top:0.15em;margin-right:0.07142857142857144em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">y</span></span></span><span style="top:0em;margin-left:0.11112em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>¯</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose"><span class="mclose">)</span><span class="vlist"><span style="top:-0.289em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span style="top:-0.22999999999999998em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.520007em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mop"><span class="op-symbol small-op mop" style="top:0.074995em;">∑</span><span class="vlist"><span style="top:0.30001em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord scriptscriptstyle cramped"><span class="mord mathit">i</span><span class="mrel">=</span><span class="mord mathrm">1</span></span></span></span><span style="top:-0.364em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle uncramped"><span class="mord mathit">n</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">y</span><span class="vlist"><span style="top:0.15em;margin-right:0.07142857142857144em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">−</span><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord scriptstyle cramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">y</span><span class="vlist"><span style="top:0.15em;margin-right:0.07142857142857144em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span><span style="top:0em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>^</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose"><span class="mclose">)</span><span class="vlist"><span style="top:-0.363em;margin-right:0.07142857142857144em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span></span></span></span></p>
+<p>where <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">y_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">y</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> is the ground truth event progress value, <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>y</mi></mrow><mo>¯</mo></mover></mrow><annotation encoding="application/x-tex">\bar{y}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.56778em;"></span><span class="strut bottom" style="height:0.7622199999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">y</span></span></span><span style="top:0em;margin-left:0.11112em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>¯</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> is the
+mean of all <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">y_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">y</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><msub><mi>y</mi><mi>i</mi></msub></mrow><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\hat{y_i}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord textstyle cramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">y</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span><span style="top:0em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>^</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> is the prediction made by the linear
+regression model. The maximum value of this measure is <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn></mrow><annotation encoding="application/x-tex">1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.64444em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">1</span></span></span></span>.</p>
+<p><strong>3. Kendall's Tau <dt-cite key="wiki:kendallstau"></dt-cite>:</strong>
+is a  statistical measure that can determine how
+well-aligned two sequences are in time. Unlike the above two
+measures it does not require  additional labels for evaluation.
+Kendall's Tau is calculated over every pair of frames in a pair of videos by
+sampling  a pair of frames (<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>u</mi><mi>i</mi></msub><mo separator="true">,</mo><msub><mi>u</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">u_i, u_j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.716668em;vertical-align:-0.286108em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">i</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord"><span class="mord mathit">u</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>) in the first video (which has <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.43056em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">n</span></span></span></span>
+frames) and retrieving the corresponding nearest frames in the second
+video, (<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>v</mi><mi>p</mi></msub></mrow><annotation encoding="application/x-tex">v_p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.716668em;vertical-align:-0.286108em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">p</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>, <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>v</mi><mi>q</mi></msub></mrow><annotation encoding="application/x-tex">v_q</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.716668em;vertical-align:-0.286108em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.03588em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03588em;">q</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>). This quadruplet of frame indices <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi>i</mi><mo separator="true">,</mo><mi>j</mi><mo separator="true">,</mo><mi>p</mi><mo separator="true">,</mo><mi>q</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">(i,j,p,q)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mopen">(</span><span class="mord mathit">i</span><span class="mpunct">,</span><span class="mord mathit" style="margin-right:0.05724em;">j</span><span class="mpunct">,</span><span class="mord mathit">p</span><span class="mpunct">,</span><span class="mord mathit" style="margin-right:0.03588em;">q</span><span class="mclose">)</span></span></span></span> is
+said to be <i>concordant</i> if <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>i</mi><mo>&lt;</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">i &lt; j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.65952em;"></span><span class="strut bottom" style="height:0.85396em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit">i</span><span class="mrel">&lt;</span><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>p</mi><mo>&lt;</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p &lt; q</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.5391em;"></span><span class="strut bottom" style="height:0.7335400000000001em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit">p</span><span class="mrel">&lt;</span><span class="mord mathit" style="margin-right:0.03588em;">q</span></span></span></span> or <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>i</mi><mo>&gt;</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">i &gt; j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.65952em;"></span><span class="strut bottom" style="height:0.85396em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit">i</span><span class="mrel">&gt;</span><span class="mord mathit" style="margin-right:0.05724em;">j</span></span></span></span> and
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>p</mi><mo>&gt;</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p &gt; q</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.5391em;"></span><span class="strut bottom" style="height:0.7335400000000001em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit">p</span><span class="mrel">&gt;</span><span class="mord mathit" style="margin-right:0.03588em;">q</span></span></span></span>. Otherwise it is said to be <i>discordant</i>. Kendall's Tau
+is defined over all pairs of frames in the first video as:</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>τ</mi><mo>=</mo><mfrac><mrow><mo>(</mo><mtext><mi mathvariant="normal">n</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">.</mi><mtext> </mtext><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mtext> </mtext><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">d</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">t</mi><mtext> </mtext><mi mathvariant="normal">p</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">s</mi></mtext><mo>−</mo><mtext><mi mathvariant="normal">n</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">.</mi><mtext> </mtext><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mtext> </mtext><mi mathvariant="normal">d</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">d</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">t</mi><mtext> </mtext><mi mathvariant="normal">p</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">s</mi></mtext><mo>)</mo></mrow><mrow><mfrac><mrow><mi>n</mi><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></mfrac></mrow><annotation encoding="application/x-tex">\tau = \frac{(\text{no. of concordant pairs} - \text{no. of discordant
+pairs})}{\frac{n(n-1)}{2}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:1.01em;"></span><span class="strut bottom" style="height:1.7965em;vertical-align:-0.7864999999999999em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.1132em;">τ</span><span class="mrel">=</span><span class="mord reset-textstyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.5449999999999999em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord reset-scriptstyle scriptstyle cramped"><span class="sizing reset-size5 size5 reset-scriptstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.345em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord scriptscriptstyle cramped"><span class="mord mathrm">2</span></span></span></span><span style="top:-0.22142857142857142em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle textstyle uncramped frac-line"></span></span><span style="top:-0.5142857142857143em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord scriptscriptstyle cramped"><span class="mord mathit">n</span><span class="mopen">(</span><span class="mord mathit">n</span><span class="mbin">−</span><span class="mord mathrm">1</span><span class="mclose">)</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-scriptstyle textstyle uncramped nulldelimiter"></span></span></span></span></span><span style="top:-0.2300000000000001em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.485em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mopen">(</span><span class="text mord scriptstyle uncramped"><span class="mord mathrm">n</span><span class="mord mathrm">o</span><span class="mord mathrm">.</span><span class="mord mspace"> </span><span class="mord mathrm">o</span><span class="mord mathrm" style="margin-right:0.07778em;">f</span><span class="mord mspace"> </span><span class="mord mathrm">c</span><span class="mord mathrm">o</span><span class="mord mathrm">n</span><span class="mord mathrm">c</span><span class="mord mathrm">o</span><span class="mord mathrm">r</span><span class="mord mathrm">d</span><span class="mord mathrm">a</span><span class="mord mathrm">n</span><span class="mord mathrm">t</span><span class="mord mspace"> </span><span class="mord mathrm">p</span><span class="mord mathrm">a</span><span class="mord mathrm">i</span><span class="mord mathrm">r</span><span class="mord mathrm">s</span></span><span class="mbin">−</span><span class="text mord scriptstyle uncramped"><span class="mord mathrm">n</span><span class="mord mathrm">o</span><span class="mord mathrm">.</span><span class="mord mspace"> </span><span class="mord mathrm">o</span><span class="mord mathrm" style="margin-right:0.07778em;">f</span><span class="mord mspace"> </span><span class="mord mathrm">d</span><span class="mord mathrm">i</span><span class="mord mathrm">s</span><span class="mord mathrm">c</span><span class="mord mathrm">o</span><span class="mord mathrm">r</span><span class="mord mathrm">d</span><span class="mord mathrm">a</span><span class="mord mathrm">n</span><span class="mord mathrm">t</span><span class="mord mspace"> </span><span class="mord mathrm">p</span><span class="mord mathrm">a</span><span class="mord mathrm">i</span><span class="mord mathrm">r</span><span class="mord mathrm">s</span></span><span class="mclose">)</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span></span></span></span></p>
+<p>We refer the reader to <dt-cite key="wiki:kendallstau"></dt-cite> to check out the
+complete definition. The reported metric is the average Kendall's Tau
+over all pairs of videos in the validation set. It is a measure of how
+well the learned representations generalize to aligning unseen
+sequences if we used nearest neighbour matching for aligning a pair of
+videos. A value of 1 implies the videos are perfectly aligned while a
+value of -1 implies the videos are aligned in the reverse order. One
+drawback of Kendall's tau is that it assumes there are no repetitive frames in a video. This might not be the case if an action is
+being done slowly or if there is periodic motion. For the datasets we
+consider, this drawback is not a problem.</p>
+<h2>Experiments</h2>
+<h3>Baselines</h3>
+<div id="methods"></div>
+<p>We compare our representations with existing self-supervised video representation learning methods. For completeness, we briefly describe the baselines below but recommend referring to the original papers for more details.</p>
+<p><strong>Shuffle and Learn (SaL)<dt-cite key="misra2016shuffle"></dt-cite>.</strong> We randomly sample triplets of frames in the manner suggested by <dt-cite key="misra2016shuffle"></dt-cite>. We train a small classifier to predict if the frames are in order or shuffled. The labels for training this classifier are derived from the indices of the triplet we sampled. This loss encourages the representations to encode information about the order in which an action should be performed.</p>
+<p><strong>Time-Constrastive Networks (TCN)<dt-cite key="Sermanet2017TCN"></dt-cite>.</strong> We sample <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.43056em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">n</span></span></span></span> frames from the sequence and use these as anchors (as defined in the metric learning literature). For each anchor, we sample positives within a fixed time window. This gives us n-pairs of anchors and positives. We use the n-pairs loss<dt-cite key="sohn2016improved"></dt-cite> to learn our embedding space. For any particular pair, the n-pairs loss considers all the other pairs as negatives. This loss encourages representations to be disentangled in time while still adhering to metric constraints.</p>
+<p><strong>Combined Losses.</strong> In addition to these baselines, we can combine our cycle consistency loss with both SaL and TCN to get two more training methods: TCC+SaL and TCC+TCN. We learn the embedding by computing both losses and adding them in a weighted manner to get the total loss, based on which the gradients are calculated. The weights are selected by performing a search over 3 values <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>0</mn><mi mathvariant="normal">.</mi><mn>2</mn><mn>5</mn><mo separator="true">,</mo><mn>0</mn><mi mathvariant="normal">.</mi><mn>5</mn><mo separator="true">,</mo><mn>0</mn><mi mathvariant="normal">.</mi><mn>7</mn><mn>5</mn></mrow><annotation encoding="application/x-tex">0.25, 0.5, 0.75</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.8388800000000001em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">0</span><span class="mord mathrm">.</span><span class="mord mathrm">2</span><span class="mord mathrm">5</span><span class="mpunct">,</span><span class="mord mathrm">0</span><span class="mord mathrm">.</span><span class="mord mathrm">5</span><span class="mpunct">,</span><span class="mord mathrm">0</span><span class="mord mathrm">.</span><span class="mord mathrm">7</span><span class="mord mathrm">5</span></span></span></span>. All baselines share the same video encoder architecture, as described in section <a href="#implementation_details">Implementation Details</a>.</p>
+<h3>Ablation of Different Cycle Consistency Losses</h3>
+<p>We ran an experiment on the Pouring dataset to see how the different losses compare against each other. We also report metrics on the Mean Squared Error (MSE) version of the cycle-back regression loss (<a href="#eq:4">Equation 4</a>) which is formulated by only minimizing <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi mathvariant="normal">∣</mi><mi>i</mi><mo>−</mo><mi>μ</mi><msup><mi mathvariant="normal">∣</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">|i-\mu|^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.8141079999999999em;"></span><span class="strut bottom" style="height:1.064108em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">∣</span><span class="mord mathit">i</span><span class="mbin">−</span><span class="mord mathit">μ</span><span class="mord"><span class="mord mathrm">∣</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>, ignoring the variance of predictions altogether. We present the results in <a href="#tab:pouring_loss_ablation">Table 3</a> and observe that the variance aware cycle-back regression loss outperforms both of the other losses in all metrics. We name this version of cycle-consistency as the final temporal cycle consistency (TCC) method, and use this version for the rest of the experiments.</p>
+<div class="figure" id="tab:pouring_loss_ablation">
+<img src="assets/fig/table3.png" style="margin: 0; width: 70%;"/>
+<figcaption>
+Table 3: Ablation of different cycle consistency losses.
+</figcaption>
+</div>
+<h3>Action Phase Classification</h3>
+<p><strong>Self-supervised Learning from Scratch.</strong> We perform experiments to compare different self-supervised methods for learning visual representations from scratch. This is a challenging setting as we learn the entire encoder from scratch without labels.
+We use a smaller encoder model (i.e.\ VGG-M<dt-cite key="chatfield2014return"></dt-cite>) as the training samples are limited.
+We report the results on the <i>Pouring</i> and <i>Penn Action</i> datasets in <a href="#tab:scratch_results">Table 4</a>. On both datasets, TCC features outperform the features learned by SaL and TCN. This might be attributed to the fact that TCC learns features across multiple videos during training itself. SaL and TCN losses operate on frames from a single video only but TCC considers frames from multiple videos while calculating the cycle-consistency loss. We can also compare these results with the supervised learning setting (first row in each section), in which we train the encoder using the labels of the phase classification task. For both datasets, TCC can be used for learning features from scratch and brings about significant performance boosts over plain supervised learning when there is limited labeled data.</p>
+<div class="figure" id="tab:scratch_results">
+<img src="assets/fig/table4.png" style="margin: 0; width: 70%;"/>
+<figcaption>
+Table 4: Phase classification results when training VGG-M from scratch.
+</figcaption>
+</div>
+<br>
+<div class="figure" id="tab:finetuning_results">
+<img src="assets/fig/table5.png" style="margin: 0; width: 70%;"/>
+<figcaption>
+Table 5: Phase classification results when fine-tuning ImageNet pre-trained ResNet-50.
+</figcaption>
+</div>
+<p><strong>Self-supervised Fine-tuning.</strong> Features from networks trained for the task of image classification on the ImageNet dataset have been used for many other vision tasks. They are also useful because initializing from weights of pre-trained networks leads to faster convergence. We train all the representation learning methods mentioned in Section <a href="#metrics">Evaluation</a> and report the results on the <i>Pouring</i> and <i>Penn Action</i> datasets in <a href="#tab:finetuning_results">Table 5</a>. Here the encoder model is a ResNet-50<dt-cite key="he2016deep"></dt-cite> pre-trained on ImageNet dataset. We observe that existing self-supervised approaches like SaL and TCN learn features useful for fine-grained video tasks. TCC features achieve competitive performance with the other methods on the <i>Penn Action</i> dataset while outperforming them on the <i>Pouring</i> dataset. Interestingly, the best performance is achieved by combining the cycle-consistency loss with TCN (row 8 in each section). The boost in performance when combining losses might be because training with multiples losses reduces over-fitting to cues using which the model can  minimize <i>a</i> particular loss. We can also look at the first row of their respective sections to compare with supervised learning features obtained by training on the downstream task itself. We observe that the self-supervised fine-tuning gives significant performance boosts in the low-labeled data regime (columns 1 and 2).</p>
+<p><strong>Self-supervised Few Shot Learning.</strong> We also test the usefulness of our learned representations in the few-shot scenario: we have many training videos but <i>per-frame labels</i> are only available for a few of them. In this experiment, we use the same set-up as the fine-tuning experiment described above. The embeddings are learned using either a self-supervised loss or vanilla supervised learning. To learn the self-supervised features, we use the entire training set of videos. We compare these features against the supervised learning baseline where we train the model on the videos for which labels are available. Note that one labeled video means hundreds of labeled frames. In particular, we want to see how the performance on the phase classification task is affected by increasing the number of labeled videos. We present the results in <a href="#fig:fewshot">Figure 6</a>.
+We observe significant performance boost using self-supervised methods as opposed to just using supervised learning on the labeled videos. We present results from <i>Golf Swing</i> and <i>Tennis Serve</i> classes above. With only one labeled video, TCC and TCC+TCN achieve the performance that supervised learning achieves with about 50 densely labeled videos. This suggests that there is a lot of untapped signal present in the raw videos which can be harvested using self-supervision.</p>
+<div class="figure" id="fig:fewshot">
+<img src="assets/fig/fewshot.png" style="margin: 0; width: 100%;"/>
+<figcaption>
+Figure 6: <strong>Few shot action phase classification.</strong> TCC features provide significant performance boosts when there is a dearth of labeled videos.
+</figcaption>
+</div>
+<br>
+<div class="figure" id="tab:all_regression_results">
+<img src="assets/fig/table6.png" style="margin: 0; width: 80%;"/>
+<figcaption>
+Table 6: Phase Progression and Kendall's Tau results. SL: Supervised Learning.
+</figcaption>
+</div>
+<h3>Phase Progression and Kendall's Tau</h3>
+<p>We evaluate the encodings for the remaining tasks described in Section <a href="#metrics">Evaluation</a>. These tasks measure the effectiveness of representations at a more fine-grained level than phase classification. We report the results of these experiments in <a href="#tab:all_regression_results">Table 6</a>. We observe that when training from scratch TCC features perform better on both phase progression and Kendall's Tau for both the datasets. Additionally, we note that Kendall's Tau (which measures alignment between sequences using nearest neighbors matching) is significantly higher when we learn features using the combined losses. TCC + TCN outperforms both supervised learning and self-supervised learning methods significantly for both the datasets for fine-grained tasks.</p>
+<h2>Applications</h2>
+<div class="figure" id="fig:retrieval">
+<img src="assets/fig/retrieval.png" style="margin: 0; width: 100%;"/>
+<figcaption>
+Figure 7: Nearest neighbors in the embedding space can be used for fine-grained retrieval.
+</figcaption>
+</div>
+<br>
+<div class="figure" id="fig:anomaly">
+<img src="assets/fig/anomaly.png" style="margin: 0; width: 100%;"/>
+<figcaption>
+Figure 8: <strong>Example of anomaly detection in a video</strong>. Distance from typical action trajectories spikes up during anomalous activity.
+</figcaption>
+</div>
+<p><strong>Cross-modal transfer in Videos.</strong> We are able to align a dataset of related videos without supervision. The alignment across videos enables transfer of annotations or other modalities from one video to another. For example, we can use this technique to transfer text annotations to an entire dataset of related videos by only labeling one video. One can also transfer other modalities associated with time like sound. We can <i>hallucinate</i> the sound of pouring liquids from one video to another purely on the basis of visual representations. We copy over the sound from the retrieved nearest neighbors and stitch the sounds together by simply concatenating the retrieved sounds. No other post-processing step is used. The results are in the supplementary material.</p>
+<p><strong>Fine-grained retrieval in Videos.</strong> We can use the nearest neighbours for fine-grained retrieval in a set of videos. In <a href="#fig:retrieval">Figure 7</a>, we show that we can retrieve frames when the glass is half full (Row 1) or when the hand has just placed the container back after pouring (Row 2). Note that in all retrieved examples, the liquid has already been transferred to the target container. For the <i>Baseball Pitch</i> class, the learned representations can even differentiate between the frames when the leg was up before the ball was pitched (Row 3) and after the ball was pitched (Row 4).</p>
+<p><strong>Anomaly detection.</strong> Since we have well-behaved nearest neighbors in the TCC embedding space, we can use the distance from an <i>ideal</i> trajectory in this space to detect anomalous activities in videos. If a video's trajectory in the embedding space deviates too much from the ideal trajectory, we can mark those frames as anomalous. We present an example of a video of a person attempting to bench-press in <a href="#fig:anomaly">Figure 8</a>. In the beginning the distance of the nearest neighbor is quite low. But as the video progresses, we observe a sudden spike in this distance (around the <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>2</mn><msup><mn>0</mn><mrow><mi>t</mi><mi>h</mi></mrow></msup></mrow><annotation encoding="application/x-tex">20^{th}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.849108em;"></span><span class="strut bottom" style="height:0.849108em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">2</span><span class="mord"><span class="mord mathrm">0</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathit">t</span><span class="mord mathit">h</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> frame) where the person's activity is very different from the ideal bench-press trajectory.</p>
+<p><strong>Synchronous Playback.</strong> Using the learned alignments, we can transfer the pace of a video to other videos of the same action. We include examples of different videos playing synchronously in the supplementary material.</p>
+<h2>Conclusion</h2>
+<p>In this paper, we present a self-supervised learning approach that is able to learn features useful for temporally fine-grained tasks. In multiple experiments, we find self-supervised features lead to significant performance boosts when there is a lack of labeled data. With only one labeled video, TCC achieves similar performance to supervised learning models trained with about 50 videos. Additionally, TCC is more than a proxy task for representation learning. It serves as a general-purpose temporal alignment method that works without labels and benefits any task (like annotation transfer) which relies on the alignment itself.</p>
+</dt-article>
+<dt-appendix>
+<h2>Acknowledgments</h2>
+<p>We would like to thank Anelia Angelova, Relja Arandjelovic, Sergio Guadarrama, Shefali Umrania, and Vincent Vanhoucke for their feedback on the manuscript. We are also grateful to Sourish Chaudhuri for his help with the data collection and Alexandre Passos, Allen Lavoie, Bryan Seybold, and Priya Gupta for their help with the infrastructure.</p>
+<p>This article was prepared using the <a href="https://distill.pub">Distill</a> <a href="https://github.com/distillpub/template">template</a>.</p>
+<h3 id="citation">Citation</h3>
+<p>For attribution in academic contexts, please cite this work as</p>
+<pre class="citation short">Dwibedi et al., "Temporal Cycle-Consistency Learning", 2019.</pre>
+<p>BibTeX citation</p>
+<pre class="citation long">@InProceedings{Dwibedi_2019_CVPR,
+author = {Dwibedi, Debidatta and Aytar, Yusuf and Tompson, Jonathan and Sermanet, Pierre and Zisserman, Andrew},
+title = {Temporal Cycle-Consistency Learning},
+booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+month = {June},
+year = {2019}
+}
+</pre>
+</dt-appendix>
+</dt-appendix>
+</body>
+<script type="text/bibliography">
+
+@inproceedings{zhang2013actemes,
+  title={From actemes to action: A strongly-supervised representation for detailed action understanding},
+  author={Zhang, Weiyu and Zhu, Menglong and Derpanis, Konstantinos G},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={2248--2255},
+  year={2013}
+}
+
+@article{Sermanet2017TCN,
+  author    = {Pierre Sermanet and
+               Corey Lynch and
+               Yevgen Chebotar and
+               Jasmine Hsu and
+               Eric Jang and
+               Stefan Schaal and
+               Sergey Levine},
+  title     = {Time-Contrastive Networks: Self-Supervised Learning from Video},
+  journal   = {Proceedings of International Conference in Robotics and Automation (ICRA)}},
+  year      = {2018},
+  url       = {http://arxiv.org/abs/1704.06888},
+  biburl    = {https://github.com/sermanet/home/blob/master/docs/bib/Sermanet2017TCN.bib},
+}
+
+@article{pereyra2017regularizing,
+  title={Regularizing neural networks by penalizing confident output distributions},
+  author={Pereyra, Gabriel and Tucker, George and Chorowski, Jan and Kaiser, {\L}ukasz and Hinton, Geoffrey},
+  journal={arXiv preprint arXiv:1701.06548},
+  year={2017}
+}
+
+@inproceedings{hyvarinen2016unsupervised,
+  title={Unsupervised feature extraction by time-contrastive learning and nonlinear ICA},
+  author={Hyvarinen, Aapo and Morioka, Hiroshi},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={3765--3773},
+  year={2016}
+}
+
+
+@inproceedings{misra2016shuffle,
+  title={Shuffle and learn: unsupervised learning using temporal order verification},
+  author={Misra, Ishan and Zitnick, C Lawrence and Hebert, Martial},
+  booktitle={European Conference on Computer Vision},
+  pages={527--544},
+  year={2016},
+  organization={Springer}
+}
+
+@inproceedings{sohn2016improved,
+  title={Improved deep metric learning with multi-class n-pair loss objective},
+  author={Sohn, Kihyuk},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={1857--1865},
+  year={2016}
+}
+
+@misc{wiki:kendallstau,
+    author = "{Wikipedia contributors}",
+    title = "Kendall rank correlation coefficient --- {Wikipedia}{,} The Free Encyclopedia",
+    year = "2018",
+    url = "https://en.wikipedia.org/w/index.php?title=Kendall_rank_correlation_coefficient&oldid=864762591",
+    %note = "[Online; accessed 9-November-2018]"
+  }
+
+
+@misc{ wiki:rsquared,
+    author = "{Wikipedia contributors}",
+    title = "Coefficient of determination --- {Wikipedia}{,} The Free Encyclopedia",
+    year = "2018",
+    url = "https://en.wikipedia.org/w/index.php?title=Coefficient_of_determination&oldid=866825113",
+    %note = "[Online; accessed 12-November-2018]"
+  }
+
+
+% cycle-consistency
+@inproceedings{zhou2016learning,
+  title={Learning dense correspondence via 3d-guided cycle consistency},
+  author={Zhou, Tinghui and Krahenbuhl, Philipp and Aubry, Mathieu and Huang, Qixing and Efros, Alexei A},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={117--126},
+  year={2016}
+}
+
+@article{zhu2017unpaired,
+  title={Unpaired image-to-image translation using cycle-consistent adversarial networks},
+  author={Zhu, Jun-Yan and Park, Taesung and Isola, Phillip and Efros, Alexei A},
+  journal={arXiv preprint arXiv:1703.10593},
+  year={2017},
+  publisher={ICCV}
+}
+
+@article{aytar2018playing,
+  title={Playing hard exploration games by watching YouTube},
+  author={Aytar, Yusuf and Pfaff, Tobias and Budden, David and Paine, Tom Le and Wang, Ziyu and de Freitas, Nando},
+  journal={arXiv preprint arXiv:1805.11592},
+  year={2018}
+}
+
+@inproceedings{zhou2015flowweb,
+  title={Flowweb: Joint image set alignment by weaving consistent, pixel-wise correspondences},
+  author={Zhou, Tinghui and Jae Lee, Yong and Yu, Stella X and Efros, Alyosha A},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={1191--1200},
+  year={2015}
+}
+
+@inproceedings{zhou2015multi,
+  title={Multi-image matching via fast alternating minimization},
+  author={Zhou, Xiaowei and Zhu, Menglong and Daniilidis, Kostas},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={4032--4040},
+  year={2015}
+}
+
+@inproceedings{li2016unsupervised,
+  title={Unsupervised visual representation learning by graph-based consistent constraints},
+  author={Li, Dong and Hung, Wei-Chih and Huang, Jia-Bin and Wang, Shengjin and Ahuja, Narendra and Yang, Ming-Hsuan},
+  booktitle={European Conference on Computer Vision},
+  pages={678--694},
+  year={2016},
+  organization={Springer}
+}
+
+@inproceedings{wang2013image,
+  title={Image co-segmentation via consistent functional maps},
+  author={Wang, Fan and Huang, Qixing and Guibas, Leonidas J},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={849--856},
+  year={2013}
+} % co-segmentation
+@inproceedings{wang2014unsupervised,
+  title={Unsupervised multi-class joint image segmentation},
+  author={Wang, Fan and Huang, Qixing and Ovsjanikov, Maks and Guibas, Leonidas J},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={3142--3149},
+  year={2014}
+}% co-segmentation
+@inproceedings{wilson2013network,
+  title={Network principles for sfm: Disambiguating repeated structures with local context},
+  author={Wilson, Kyle and Snavely, Noah},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={513--520},
+  year={2013}
+}%sfm
+@inproceedings{zach2010disambiguating,
+  title={Disambiguating visual relations using loop constraints},
+  author={Zach, Christopher and Klopschitz, Manfred and Pollefeys, Marc},
+  booktitle={Computer Vision and Pattern Recognition (CVPR), 2010 IEEE Conference on},
+  pages={1426--1433},
+  year={2010},
+  organization={IEEE}
+}%sfm
+
+
+@article{hoffman2017cycada,
+  title={Cycada: Cycle-consistent adversarial domain adaptation},
+  author={Hoffman, Judy and Tzeng, Eric and Park, Taesung and Zhu, Jun-Yan and Isola, Phillip and Saenko, Kate and Efros, Alexei A and Darrell, Trevor},
+  journal={arXiv preprint arXiv:1711.03213},
+  year={2017}
+}
+
+
+% sequence alignment
+@book{durbin1998biological,
+  title={Biological sequence analysis: probabilistic models of proteins and nucleic acids},
+  author={Durbin, Richard and Eddy, Sean R and Krogh, Anders and Mitchison, Graeme},
+  year={1998},
+  publisher={Cambridge university press}
+}
+
+@inproceedings{listgarten2005multiple,
+  title={Multiple alignment of continuous time series},
+  author={Listgarten, Jennifer and Neal, Radford M and Roweis, Sam T and Emili, Andrew},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={817--824},
+  year={2005}
+}
+
+@article{bahdanau2014neural,
+  title={Neural machine translation by jointly learning to align and translate},
+  author={Bahdanau, Dzmitry and Cho, Kyunghyun and Bengio, Yoshua},
+  journal={arXiv preprint arXiv:1409.0473},
+  year={2014}
+}
+
+@article{soltau2016neural,
+  title={Neural speech recognizer: Acoustic-to-word LSTM model for large vocabulary speech recognition},
+  author={Soltau, Hagen and Liao, Hank and Sak, Hasim},
+  journal={arXiv preprint arXiv:1610.09975},
+  year={2016}
+}
+
+@book{gusfield1997algorithms,
+  title={Algorithms on strings, trees and sequences: computer science and computational biology},
+  author={Gusfield, Dan},
+  year={1997},
+  publisher={Cambridge university press}
+}
+
+@inproceedings{graves2006connectionist,
+  title={Connectionist temporal classification: labelling unsegmented sequence data with recurrent neural networks},
+  author={Graves, Alex and Fern{\'a}ndez, Santiago and Gomez, Faustino and Schmidhuber, J{\"u}rgen},
+  booktitle={Proceedings of the 23rd international conference on Machine learning},
+  pages={369--376},
+  year={2006},
+  organization={ACM}
+}
+
+@article{assael2016lipnet,
+  title={Lipnet: End-to-end sentence-level lipreading},
+  author={Assael, Yannis M and Shillingford, Brendan and Whiteson, Shimon and de Freitas, Nando},
+  journal={arXiv preprint arXiv:1611.01599},
+  year={2016}
+}
+
+@article{aytar2017see,
+  title={See, hear, and read: Deep aligned representations},
+  author={Aytar, Yusuf and Vondrick, Carl and Torralba, Antonio},
+  journal={arXiv preprint arXiv:1706.00932},
+  year={2017}
+}
+
+@inproceedings{arandjelovic2017look,
+  title={Look, listen and learn},
+  author={Arandjelovic, Relja and Zisserman, Andrew},
+  booktitle={2017 IEEE International Conference on Computer Vision (ICCV)},
+  pages={609--617},
+  year={2017},
+  organization={IEEE}
+}
+
+@inproceedings{andrew2013deep,
+  title={Deep canonical correlation analysis},
+  author={Andrew, Galen and Arora, Raman and Bilmes, Jeff and Livescu, Karen},
+  booktitle={International Conference on Machine Learning},
+  pages={1247--1255},
+  year={2013}
+}
+
+@book{anderson1958introduction,
+  title={An introduction to multivariate statistical analysis},
+  author={Anderson, Theodore Wilbur},
+  volume={2},
+  year={1958},
+  publisher={Wiley New York}
+}
+
+@inproceedings{krizhevsky2012imagenet,
+  title={Imagenet classification with deep convolutional neural networks},
+  author={Krizhevsky, Alex and Sutskever, Ilya and Hinton, Geoffrey E},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={1097--1105},
+  year={2012}
+}
+
+@inproceedings{sigurdsson2018actor,
+  title={Actor and Observer: Joint Modeling of First and Third-Person Videos},
+  author={Sigurdsson, Gunnar and Gupta, Abhinav and Schmid, Cordelia and Farhadi, Ali and Alahari, Karteek},
+  booktitle={CVPR-IEEE Conference on Computer Vision \& Pattern Recognition},
+  year={2018}
+}
+
+@inproceedings{sutskever2014sequence,
+  title={Sequence to sequence learning with neural networks},
+  author={Sutskever, Ilya and Vinyals, Oriol and Le, Quoc V},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={3104--3112},
+  year={2014}
+}
+
+@inproceedings{aytar2016soundnet,
+  title={Soundnet: Learning sound representations from unlabeled video},
+  author={Aytar, Yusuf and Vondrick, Carl and Torralba, Antonio},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={892--900},
+  year={2016}
+}
+
+@inproceedings{owens2016ambient,
+  title={Ambient sound provides supervision for visual learning},
+  author={Owens, Andrew and Wu, Jiajun and McDermott, Josh H and Freeman, William T and Torralba, Antonio},
+  booktitle={European Conference on Computer Vision},
+  pages={801--816},
+  year={2016},
+  organization={Springer}
+}
+
+% action recognition, parsing  and phase classification
+
+@inproceedings{sener2015unsupervised,
+  title={Unsupervised semantic parsing of video collections},
+  author={Sener, Ozan and Zamir, Amir R and Savarese, Silvio and Saxena, Ashutosh},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={4480--4488},
+  year={2015}
+}
+
+@inproceedings{sigurdsson2017asynchronous,
+  title={Asynchronous Temporal Fields for Action Recognition.},
+  author={Sigurdsson, Gunnar A and Divvala, Santosh Kumar and Farhadi, Ali and Gupta, Abhinav},
+  booktitle={CVPR},
+  volume={5},
+  pages={7},
+  year={2017}
+}
+
+@article{zhao2017temporal,
+  title={Temporal action detection with structured segment networks},
+  author={Zhao, Yue and Xiong, Yuanjun and Wang, Limin and Wu, Zhirong and Tang, Xiaoou and Lin, Dahua},
+  journal={ICCV, Oct},
+  volume={2},
+  year={2017}
+}
+
+
+@inproceedings{girdhar2017actionvlad,
+  title={ActionVLAD: Learning spatio-temporal aggregation for action classification},
+  author={Girdhar, Rohit and Ramanan, Deva and Gupta, Abhinav and Sivic, Josef and Russell, Bryan},
+  booktitle={CVPR},
+  volume={2},
+  pages={3},
+  year={2017}
+}
+
+
+@inproceedings{lan2015action,
+  title={Action recognition by hierarchical mid-level action elements},
+  author={Lan, Tian and Zhu, Yuke and Roshan Zamir, Amir and Savarese, Silvio},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={4552--4560},
+  year={2015}
+}
+
+
+@inproceedings{lea2016segmental,
+  title={Segmental spatiotemporal cnns for fine-grained action segmentation},
+  author={Lea, Colin and Reiter, Austin and Vidal, Ren{\'e} and Hager, Gregory D},
+  booktitle={European Conference on Computer Vision},
+  pages={36--52},
+  year={2016},
+  organization={Springer}
+}
+
+@article{yeung2018every,
+  title={Every moment counts: Dense detailed labeling of actions in complex videos},
+  author={Yeung, Serena and Russakovsky, Olga and Jin, Ning and Andriluka, Mykhaylo and Mori, Greg and Fei-Fei, Li},
+  journal={International Journal of Computer Vision},
+  volume={126},
+  number={2-4},
+  pages={375--389},
+  year={2018},
+  publisher={Springer}
+}
+
+
+@inproceedings{wang2016temporal,
+  title={Temporal segment networks: Towards good practices for deep action recognition},
+  author={Wang, Limin and Xiong, Yuanjun and Wang, Zhe and Qiao, Yu and Lin, Dahua and Tang, Xiaoou and Van Gool, Luc},
+  booktitle={European Conference on Computer Vision},
+  pages={20--36},
+  year={2016},
+  organization={Springer}
+}
+
+
+@inproceedings{pirsiavash2014parsing,
+  title={Parsing videos of actions with segmental grammars},
+  author={Pirsiavash, Hamed and Ramanan, Deva},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={612--619},
+  year={2014}
+}
+
+@article{sener2018unsupervised,
+  title={Unsupervised Learning and Segmentation of Complex Activities from Video},
+  author={Sener, Fadime and Yao, Angela},
+  journal={arXiv preprint arXiv:1803.09490},
+  year={2018}
+}
+
+
+
+@article{simonyan2014very,
+  title={Very deep convolutional networks for large-scale image recognition},
+  author={Simonyan, Karen and Zisserman, Andrew},
+  journal={arXiv preprint arXiv:1409.1556},
+  year={2014}
+}
+
+
+@inproceedings{goldberger2005neighbourhood,
+  title={Neighbourhood components analysis},
+  author={Goldberger, Jacob and Hinton, Geoffrey E and Roweis, Sam T and Salakhutdinov, Ruslan R},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={513--520},
+  year={2005}
+}
+
+@inproceedings{movshovitz2017no,
+  title={No Fuss Distance Metric Learning Using Proxies},
+  author={Movshovitz-Attias, Yair and Toshev, Alexander and Leung, Thomas K and Ioffe, Sergey and Singh, Saurabh},
+  booktitle={Computer Vision (ICCV), 2017 IEEE International Conference on},
+  pages={360--368},
+  year={2017},
+  organization={IEEE}
+}
+
+@inproceedings{snell2017prototypical,
+  title={Prototypical networks for few-shot learning},
+  author={Snell, Jake and Swersky, Kevin and Zemel, Richard},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={4077--4087},
+  year={2017}
+}
+
+@inproceedings{fernando2017self,
+  title={Self-supervised video representation learning with odd-one-out networks},
+  author={Fernando, Basura and Bilen, Hakan and Gavves, Efstratios and Gould, Stephen},
+  booktitle={Computer Vision and Pattern Recognition (CVPR), 2017 IEEE Conference on},
+  pages={5729--5738},
+  year={2017},
+  organization={IEEE}
+}
+
+@article{chatfield2014return,
+  title={Return of the devil in the details: Delving deep into convolutional nets},
+  author={Chatfield, Ken and Simonyan, Karen and Vedaldi, Andrea and Zisserman, Andrew},
+  journal={arXiv preprint arXiv:1405.3531},
+  year={2014}
+}
+
+@article{anoop33deeppermnet,
+  title={DeepPermNet: Visual Permutation Learning},
+  author={Anoop, Rodrigo Santa Cruz Basura Fernando and Gould, Cherian Stephen},
+  journal={learning},
+  volume={33},
+  pages={25}
+}
+
+@article{sanakoyeu2018deep,
+  title={Deep unsupervised learning of visual similarities},
+  author={Sanakoyeu, Artsiom and Bautista, Miguel A and Ommer, Bj{\"o}rn},
+  journal={Pattern Recognition},
+  volume={78},
+  pages={331--343},
+  year={2018},
+  publisher={Elsevier}
+}
+
+@article{heidarivincheh2018action,
+  title={Action Completion: A Temporal Model for Moment Detection},
+  author={Heidarivincheh, Farnoosh and Mirmehdi, Majid and Damen, Dima},
+  journal={arXiv preprint arXiv:1805.06749},
+  year={2018}
+}
+
+@InProceedings{Alayrac16unsupervised,
+    author      = "Alayrac, Jean-Baptiste and Bojanowski, Piotr and Agrawal, Nishant and Laptev, Ivan and Sivic, Josef and Lacoste-Julien, Simon",
+    title       = "Unsupervised learning from Narrated Instruction Videos",
+    booktitle   = "Computer Vision and Pattern Recognition (CVPR)",
+    year        = "2016"
+}
+
+@inproceedings{niebles2010modeling,
+  title={Modeling temporal structure of decomposable motion segments for activity classification},
+  author={Niebles, Juan Carlos and Chen, Chih-Wei and Fei-Fei, Li},
+  booktitle={European conference on computer vision},
+  pages={392--405},
+  year={2010},
+  organization={Springer}
+}
+
+@inproceedings{he2016deep,
+  title={Deep residual learning for image recognition},
+  author={He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle={Proceedings of the IEEE conference on computer vision and pattern recognition},
+  pages={770--778},
+  year={2016}
+}
+
+
+@inproceedings{carreira2017quo,
+  title={Quo vadis, action recognition? a new model and the kinetics dataset},
+  author={Carreira, Joao and Zisserman, Andrew},
+  booktitle={Computer Vision and Pattern Recognition (CVPR), 2017 IEEE Conference on},
+  pages={4724--4733},
+  year={2017},
+  organization={IEEE}
+}
+
+@article{soomro2012ucf101,
+  title={UCF101: A dataset of 101 human actions classes from videos in the wild},
+  author={Soomro, Khurram and Zamir, Amir Roshan and Shah, Mubarak},
+  journal={arXiv preprint arXiv:1212.0402},
+  year={2012}
+}
+
+
+@inproceedings{revaud2013event,
+  title={Event retrieval in large video collections with circulant temporal encoding},
+  author={Revaud, J{\'e}r{\^o}me and Douze, Matthijs and Schmid, Cordelia and J{\'e}gou, Herv{\'e}},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={2459--2466},
+  year={2013}
+}
+
+@inproceedings{wang2013action,
+  title={Action recognition with improved trajectories},
+  author={Wang, Heng and Schmid, Cordelia},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={3551--3558},
+  year={2013}
+}
+
+
+@article{maaten2008visualizing,
+  title={Visualizing data using t-SNE},
+  author={Maaten, Laurens van der and Hinton, Geoffrey},
+  journal={Journal of machine learning research},
+  volume={9},
+  number={Nov},
+  pages={2579--2605},
+  year={2008}
+}
+
+@inproceedings{del2015articulated,
+  title={Articulated motion discovery using pairs of trajectories},
+  author={Del Pero, Luca and Ricco, Susanna and Sukthankar, Rahul and Ferrari, Vittorio},
+  booktitle={Proceedings of the IEEE conference on computer vision and pattern recognition},
+  pages={2151--2160},
+  year={2015}
+}
+
+
+@inproceedings{shechtman2007matching,
+  title={Matching local self-similarities across images and videos},
+  author={Shechtman, Eli and Irani, Michal},
+  booktitle={2007 IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={1--8},
+  year={2007},
+  organization={IEEE}
+}
+
+
+@article{heidarivincheh2018action,
+  title={Action completion: a temporal model for moment detection},
+  author={Heidarivincheh, Farnoosh and Mirmehdi, Majid and Damen, Dima},
+  journal={arXiv preprint arXiv:1805.06749},
+  year={2018}
+}
+
+@article{becattini2017done,
+  title={Am I done? predicting action progress in videos},
+  author={Becattini, Federico and Uricchio, Tiberio and Seidenari, Lorenzo and Del Bimbo, Alberto and Ballan, Lamberto},
+  journal={arXiv preprint arXiv:1705.01781},
+  year={2017}
+}
+
+@inproceedings{ma2016learning,
+  title={Learning activity progression in LSTMs for activity detection and early detection},
+  author={Ma, Shugao and Sigal, Leonid and Sclaroff, Stan},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={1942--1950},
+  year={2016}
+}
+
+@inproceedings{villegas2018neural,
+  title={Neural kinematic networks for unsupervised motion retargetting},
+  author={Villegas, Ruben and Yang, Jimei and Ceylan, Duygu and Lee, Honglak},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={8639--8648},
+  year={2018}
+}
+
+@inproceedings{damen2018scaling,
+  title={Scaling egocentric vision: The epic-kitchens dataset},
+  author={Damen, Dima and Doughty, Hazel and Maria Farinella, Giovanni and Fidler, Sanja and Furnari, Antonino and Kazakos, Evangelos and Moltisanti, Davide and Munro, Jonathan and Perrett, Toby and Price, Will and others},
+  booktitle={Proceedings of the European Conference on Computer Vision (ECCV)},
+  pages={720--736},
+  year={2018}
+}
+
+
+@article{kuehne2015cooking,
+  title={Cooking in the kitchen: Recognizing and Segmenting Human Activities in Videos},
+  author={Kuehne, Hilde and Gall, Juergen and Serre, Thomas},
+  journal={arXiv preprint arXiv:1508.06073},
+  year={2015}
+}
+
+@inproceedings{kuehne2014language,
+  title={The language of actions: Recovering the syntax and semantics of goal-directed human activities},
+  author={Kuehne, Hilde and Arslan, Ali and Serre, Thomas},
+  booktitle={Proceedings of the IEEE conference on computer vision and pattern recognition},
+  pages={780--787},
+  year={2014}
+}
+
+@inproceedings{bojanowski2014weakly,
+  title={Weakly supervised action labeling in videos under ordering constraints},
+  author={Bojanowski, Piotr and Lajugie, R{\'e}mi and Bach, Francis and Laptev, Ivan and Ponce, Jean and Schmid, Cordelia and Sivic, Josef},
+  booktitle={European Conference on Computer Vision},
+  pages={628--643},
+  year={2014},
+  organization={Springer}
+}
+
+@inproceedings{doersch2015unsupervised,
+  title={Unsupervised visual representation learning by context prediction},
+  author={Doersch, Carl and Gupta, Abhinav and Efros, Alexei A},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={1422--1430},
+  year={2015}
+}
+
+@inproceedings{doersch2017multi,
+  title={Multi-task self-supervised visual learning},
+  author={Doersch, Carl and Zisserman, Andrew},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={2051--2060},
+  year={2017}
+}
+
+@inproceedings{abadi2016tensorflow,
+  title={Tensorflow: A system for large-scale machine learning},
+  author={Abadi, Mart{\'\i}n and Barham, Paul and Chen, Jianmin and Chen, Zhifeng and Davis, Andy and Dean, Jeffrey and Devin, Matthieu and Ghemawat, Sanjay and Irving, Geoffrey and Isard, Michael and others},
+  booktitle={12th $\{$USENIX$\}$ Symposium on Operating Systems Design and Implementation ($\{$OSDI$\}$ 16)},
+  pages={265--283},
+  year={2016}
+}
+
+
+@article{agrawal2019tensorflow,
+  title={TensorFlow Eager: A Multi-Stage, Python-Embedded DSL for Machine Learning},
+  author={Agrawal, Akshay and Modi, Akshay Naresh and Passos, Alexandre and Lavoie, Allen and Agarwal, Ashish and Shankar, Asim and Ganichev, Igor and Levenberg, Josh and Hong, Mingsheng and Monga, Rajat and others},
+  journal={arXiv preprint arXiv:1903.01855},
+  year={2019}
+}
+
+@inproceedings{rocco2018neighbourhood,
+  title={Neighbourhood consensus networks},
+  author={Rocco, Ignacio and Cimpoi, Mircea and Arandjelovi{\'c}, Relja and Torii, Akihiko and Pajdla, Tomas and Sivic, Josef},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={1658--1669},
+  year={2018}
+}
+
+</script>
+<script src="lib/blazy.js"></script>
+<script>
+  var bLazy = new Blazy({
+    success: function(){
+      updateCounter();
+    }
+  });
+  var imageLoaded = 0;
+  function updateCounter() {
+    imageLoaded++;
+    console.log("blazy image loaded: "+imageLoaded);
+  }
+</script>
