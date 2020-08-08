@@ -65,7 +65,7 @@
 
 
 
-              <p>I am a researcher in <a href="https://ai.google/research/teams/brain">Google Brain</a>. I completed my Masters in Robotics from the <a href="https://www.ri.cmu.edu/">Robotics Institute</a> at <a href="https://www.cmu.edu/">CMU</a>, where I was advised by <a href="http://www.cs.cmu.edu/~hebert/"> Martial Hebert</a>. Prior to that I completed my undergrad from <a href="http://www.iitk.ac.in/">IIT Kanpur</a>, where I worked with <a href="http://www.cse.iitk.ac.in/users/amit/">Amitabha Mukerjee</a>.
+              <p>I am a Research Scientist in <a href="https://ai.google/research/teams/brain">Google Brain</a>. I completed my Masters in Robotics from the <a href="https://www.ri.cmu.edu/">Robotics Institute</a> at <a href="https://www.cmu.edu/">CMU</a>, where I was advised by <a href="http://www.cs.cmu.edu/~hebert/"> Martial Hebert</a>. Prior to that I completed my undergrad from <a href="http://www.iitk.ac.in/">IIT Kanpur</a>, where I worked with <a href="http://www.cse.iitk.ac.in/users/amit/">Amitabha Mukerjee</a>.
                 <br>
 
               </p><p align="center">
@@ -111,6 +111,44 @@
 
         <tbody><tr><td>
           <h2 id="publications">Publications</h2></td></tr>
+
+          <tr>
+            <td width="42%" valign="top"><a href="assets/repnet.gif"><img src="assets/repnet.gif" width="100%" height="60%" style="border-style: none"></a>
+            </td><td width="58%" valign="top">
+              <p><a href="https://arxiv.org/abs/2006.15418" id="REPNET">
+                <heading>Counting Out Time: Class Agnostic Video Repetition Counting in the Wild</heading></a><br>
+                Debidatta Dwibedi, <a href="https://people.csail.mit.edu/yusuf/">Yusuf Aytar</a>, <a href="https://cims.nyu.edu/~tompson/">Jonathan Tompson</a>, <a href="https://sermanet.github.io/home/">Pierre Sermanet</a>, <a href="https://www.robots.ox.ac.uk/~az/">Andrew Zisserman</a> <br>
+                <em><a href="http://cvpr2020.thecvf.com/">Computer Vision and Pattern Recognition (CVPR) 2020 </a></em>
+                <br>
+                <br>
+                Count repetitions in videos in a class-agnostic manner.<br>
+
+              </p>
+
+              <div class="paper" id="repnet">
+                <a href="https://arxiv.org/abs/2006.15418">paper</a> |
+                <a href="javascript:toggleblock(&#39;repnet_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;repnet&#39;)" class="togglebib">bibtex</a> |
+                <a href="https://sites.google.com/view/repnet"> project </a> |
+                <a href="https://www.youtube.com/watch?v=bvqg-ngu54g"> teaser video </a> |
+                <a href="https://ai.googleblog.com/2020/06/repnet-counting-repetitions-in-videos.html"> Google AI blogpost </a> |
+                <a href="https://colab.research.google.com/github/google-research/google-research/blob/master/repnet/repnet_colab.ipynb"> colab </a>
+
+                <p align="justify"> <i id="repnet_abs" style="display: none;"> We present an approach for estimating the period with which an action is repeated in a video. The crux of the approach lies in constraining the period prediction module to use temporal self-similarity as an intermediate representation bottleneck that allows generalization to unseen repetitions in videos in the wild. We train this model, called Repnet, with a synthetic dataset that is generated from a large unlabeled video collection by sampling short clips of varying lengths and repeating them with different periods and counts. This combination of synthetic data and a powerful yet constrained model, allows us to predict periods in a class-agnostic fashion. Our model substantially exceeds the state of the art performance on existing periodicity (PERTUBE) and repetition counting (QUVA) benchmarks. We also collect a new challenging dataset called Countix (~90 times larger than existing datasets) which captures the challenges of repetition counting in real-world videos.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+                 @InProceedings{Dwibedi_2020_CVPR,
+author = {Dwibedi, Debidatta and Aytar, Yusuf and Tompson, Jonathan and Sermanet, Pierre and Zisserman, Andrew},
+title = {Counting Out Time: Class Agnostic Video Repetition Counting in the Wild},
+booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+month = {June},
+year = {2020}
+}
+             </div>
+           </div>
+         </td>
+       </tr>
+
 
           <tr>
             <td width="42%" valign="top"><a href="assets/tcc.gif"><img src="assets/tcc.gif" width="100%" height="60%" style="border-style: none"></a>
@@ -554,6 +592,9 @@
 </script>
 <script xml:space="preserve" language="JavaScript">
   hideblock('tcc_abs');
+</script>
+<script xml:space="preserve" language="JavaScript">
+  hideblock('repnet_abs');
 </script>
 
 
