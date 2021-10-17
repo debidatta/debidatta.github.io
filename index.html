@@ -113,6 +113,46 @@
           <h2 id="publications">Publications</h2></td></tr>
 
           <tr>
+            <td width="30%" valign="top"><a href="assets/xirl.gif"><img src="assets/xirl.gif" width="100%" style="border-style: none"></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://arxiv.org/abs/2106.03911" id="XIRL">
+                <heading>XIRL: Cross-embodiment Inverse Reinforcement Learning</heading></a><br>
+                <a href="https://kzakka.github.io/">Kevin Zakka</a>,
+                <a href="https://andyzeng.github.io/">Andy Zeng</a>,
+                <a href="http://www.peteflorence.com/">Pete Florence</a>,
+                <a href="https://jonathantompson.github.io/">Jonathan Tompson</a>,
+                <a href="https://web.stanford.edu/~bohg/">Jeannette Bohg</a>,
+                Debidatta Dwibedi
+                <br>
+                <em><a href="https://www.robot-learning.org/">Conference on Robot Learning (CoRL) 2021</a></em>
+                <br>
+                <br>
+                Use visual rewards learned by aligning videos to train robots.<br>
+
+              </p>
+
+              <div class="paper" id="xirl">
+                <a href="https://arxiv.org/abs/2106.03911">paper</a> |
+                <a href="javascript:toggleblock(&#39;xirl_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;xirl&#39;)" class="togglebib">bibtex</a> |
+                <a href="https://x-irl.github.io/"> project </a>|
+                <a href="https://github.com/google-research/google-research/tree/master/xirl"> code </a>
+
+                <p align="justify"> <i id="xirl_abs" style="display: none;"> We investigate the visual cross-embodiment imitation setting, in which agents learn policies from videos of other agents (such as humans) demonstrating the same task, but with stark differences in their embodiments -- shape, actions, end-effector dynamics, etc. In this work, we demonstrate that it is possible to automatically discover and learn vision-based reward functions from cross-embodiment demonstration videos that are robust to these differences. Specifically, we present a self-supervised method for Cross-embodiment Inverse Reinforcement Learning (XIRL) that leverages temporal cycle-consistency constraints to learn deep visual embeddings that capture task progression from offline videos of demonstrations across multiple expert agents, each performing the same task differently due to embodiment differences. Prior to our work, producing rewards from self-supervised embeddings typically required alignment with a reference trajectory, which may be difficult to acquire under stark embodiment differences. We show empirically that if the embeddings are aware of task progress, simply taking the negative distance between the current state and goal state in the learned embedding space is useful as a reward for training policies with reinforcement learning. We find our learned reward function not only works for embodiments seen during training, but also generalizes to entirely new embodiments. Additionally, when transferring real-world human demonstrations to a simulated robot, we find that XIRL is more sample efficient than current best methods.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+                 @article{zakka2021xirl,
+    title = {XIRL: Cross-embodiment Inverse Reinforcement Learning},
+    author = {Zakka, Kevin and Zeng, Andy and Florence, Pete and Tompson, Jonathan and Bohg, Jeannette and Dwibedi, Debidatta},
+    journal = {Conference on Robot Learning (CoRL)},
+    year = {2021}
+}
+             </div>
+           </div>
+         </td>
+       </tr>
+
+          <tr>
             <td width="30%" valign="top"><a href="assets/repnet.gif"><img src="assets/repnet.gif" width="100%" style="border-style: none"></a>
             </td><td width="70%" valign="top">
               <p><a href="https://arxiv.org/abs/2006.15418" id="REPNET">
