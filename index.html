@@ -113,6 +113,40 @@
           <h2 id="publications">Publications</h2></td></tr>
 
           <tr>
+            <td width="30%" valign="top"><a href="assets/qmatch.png"><img src="assets/qmatch.png" width="100%" style="border-style: none"></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://arxiv.org/abs/2302.05444" id="Q-Match">
+                <heading>Q-Match: Self-Supervised Learning by Matching Distributions Induced by a Queue</heading></a><br>
+                <a href="https://github.com/tmulc18">Tommy Mulc</a>, <b>Debidatta Dwibedi</b> <br>
+                <em><a href="https://iccv2021.thecvf.com/home">Asian Conference on Machine Learning (ACML) 2023 </a></em>
+                <br>
+                <br>
+                Improved version of contrastive loss to learn features on tabular data.<br>
+              </p>
+
+              <div class="paper" id="qmatch">
+                <a href="https://arxiv.org/abs/2302.05444">paper</a> |
+                 <a href="https://github.com/google-research/google-research/tree/master/q_match">code</a> |
+                <a href="javascript:toggleblock(&#39;qmatch_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;qmatch&#39;)" class="togglebib">bibtex</a>
+
+                <p align="justify"> <i id="qmatch_abs" style="display: none;"> In semi-supervised learning, student-teacher distribution matching has been successful in improving performance of models using unlabeled data in conjunction with few labeled samples. In this paper, we aim to replicate that success in the self-supervised setup where we do not have access to any labeled data during pre-training. We introduce our algorithm, Q-Match, and show it is possible to induce the student-teacher distributions without any knowledge of downstream classes by using a queue of embeddings of samples from the unlabeled dataset. We focus our study on tabular datasets and show that Q-Match outperforms previous self-supervised learning techniques when measuring downstream classification performance. Furthermore, we show that our method is sample efficient--in terms of both the labels required for downstream training and the amount of unlabeled data required for pre-training--and scales well to the sizes of both the labeled and unlabeled data.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+               @misc{mulc2023qmatch,
+      title={Q-Match: Self-Supervised Learning by Matching Distributions Induced by a Queue}, 
+      author={Thomas Mulc and Debidatta Dwibedi},
+      year={2023},
+      eprint={2302.05444},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+             </div>
+           </div>
+         </td>
+       </tr>
+
+          <tr>
             <td width="30%" valign="top"><a href="assets/nnclr.png"><img src="assets/nnclr.png" width="100%" style="border-style: none"></a>
             </td><td width="70%" valign="top">
               <p><a href="https://arxiv.org/abs/2104.14548" id="NNCLR">
