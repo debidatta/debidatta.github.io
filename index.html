@@ -65,7 +65,7 @@
 
 
 
-              <p>I am a Research Scientist in <a href="https://ai.google/research/teams/brain">Google Brain</a>. I completed my Masters in Robotics from the <a href="https://www.ri.cmu.edu/">Robotics Institute</a> at <a href="https://www.cmu.edu/">CMU</a>, where I was advised by <a href="http://www.cs.cmu.edu/~hebert/"> Martial Hebert</a>. Prior to that I completed my undergrad from <a href="http://www.iitk.ac.in/">IIT Kanpur</a>, where I worked with <a href="http://www.cse.iitk.ac.in/users/amit/">Amitabha Mukerjee</a>.
+              <p>I am a Senior Research Scientist in <a href="https://deepmind.google/">Google Deepmind</a>. I completed my Masters in Robotics from the <a href="https://www.ri.cmu.edu/">Robotics Institute</a> at <a href="https://www.cmu.edu/">CMU</a>, where I was advised by <a href="http://www.cs.cmu.edu/~hebert/"> Martial Hebert</a>. Prior to that I completed my undergrad from <a href="http://www.iitk.ac.in/">IIT Kanpur</a>, where I worked with <a href="http://www.cse.iitk.ac.in/users/amit/">Amitabha Mukerjee</a>.
                 <br>
 
               </p><p align="center">
@@ -96,10 +96,7 @@
 
         <tbody><tr><td>
           <h2>Research</h2>
-
-          I want to build intelligent agents that interact with our world in useful ways.
-          <br/><br/>
-          My research lies at the intersection of machine learning, computer vision and robotics. Presently, I am working on imitation learning from videos and investigating the role time can play in learning better visual models.
+          My research lies at the intersection of machine learning, computer vision and robotics. Presently, I am working on improving vision language models.
           <br/><br/>
           
         </td></tr>
@@ -111,6 +108,41 @@
 
         <tbody><tr><td>
           <h2 id="publications">Publications</h2></td></tr>
+
+
+          <tr>
+            <td width="30%" valign="top"><a href="assets/robovqa.png"><img src="assets/robovqa.png" width="100%" style="border-style: none"></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://arxiv.org/abs/2311.00899" id="robovqa">
+                <heading>RoboVQA: Multimodal Long-Horizon Reasoning for Robotics</heading></a><br>
+                Pierre Sermanet, Tianli Ding, Jeffrey Zhao, Fei Xia, <b>Debidatta Dwibedi</b>, Keerthana Gopalakrishnan, Christine Chan, Gabriel Dulac-Arnold, Sharath Maddineni, Nikhil J Joshi, Pete Florence, Wei Han, Robert Baruch, Yao Lu, Suvir Mirchandani, Peng Xu, Pannag Sanketi, Karol Hausman, Izhak Shafran, Brian Ichter, Yuan Cao <br/>
+                <em><a href="https://2024.ieee-icra.org/">International Conference on Robotics and Automation (ICRA) 2024</a></em>
+                <br>
+                <br>
+                Improved version of contrastive loss to learn features on tabular data.<br>
+              </p>
+
+              <div class="paper" id="robo_vqa">
+                <a href="https://arxiv.org/abs/2311.00899">paper</a> |
+                 <a href="https://robovqa.github.io/">project</a> |
+                 <a href="https://console.cloud.google.com/storage/browser/gdm-robovqa">dataset</a> |
+                <a href="javascript:toggleblock(&#39;robovqa_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;robo_vqa&#39;)" class="togglebib">bibtex</a>
+
+                <p align="justify"> <i id="robovqa_abs" style="display: none;"> We present a scalable, bottom-up and intrinsically diverse data collection scheme that can be used for high-level reasoning with long and medium horizons and that has 2.2x higher throughput compared to traditional narrow top-down step-by-step collection. We collect realistic data by performing any user requests within the entirety of 3 office buildings and using multiple robot and human embodiments. With this data, we show that models trained on all embodiments perform better than ones trained on the robot data only, even when evaluated solely on robot episodes. We find that for a fixed collection budget it is beneficial to take advantage of cheaper human collection along with robot collection. We release a large and highly diverse (29,520 unique instructions) dataset dubbed RoboVQA containing 829,502 (video, text) pairs for robotics-focused visual question answering. We also demonstrate how evaluating real robot experiments with an intervention mechanism enables performing tasks to completion, making it deployable with human oversight even if imperfect while also providing a single performance metric. We demonstrate a single video-conditioned model named RoboVQA-VideoCoCa trained on our dataset that is capable of performing a variety of grounded high-level reasoning tasks in broad realistic settings with a cognitive intervention rate 46% lower than the zero-shot state of the art visual language model (VLM) baseline and is able to guide real robots through long-horizon tasks. The performance gap with zero-shot state-of-the-art models indicates that a lot of grounded data remains to be collected for real-world deployment, emphasizing the critical need for scalable data collection approaches. Finally, we show that video VLMs significantly outperform single-image VLMs with an average error rate reduction of 19% across all VQA tasks.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+               @inproceedings{robovqa2023arxiv,
+    title={RoboVQA: Multimodal Long-Horizon Reasoning for Robotics},
+    author={Pierre Sermanet and Tianli Ding and Jeffrey Zhao and Fei Xia and Debidatta Dwibedi and Keerthana Gopalakrishnan and Christine Chan and Gabriel Dulac-Arnold and Sharath Maddineni and Nikhil J Joshi and Pete Florence and Wei Han and Robert Baruch and Yao Lu and Suvir Mirchandani and Peng Xu and Pannag Sanketi and Karol Hausman and Izhak Shafran and Brian Ichter and Yuan Cao},
+    booktitle={arXiv preprint arXiv:2311.00899},
+    year={2023}
+}
+             </div>
+           </div>
+         </td>
+       </tr>
+
 
           <tr>
             <td width="30%" valign="top"><a href="assets/qmatch.png"><img src="assets/qmatch.png" width="100%" style="border-style: none"></a>
@@ -152,10 +184,10 @@
               <p><a href="https://arxiv.org/abs/2205.06333" id="slots4robots">
                 <heading>Visuomotor Control in Multi-Object Scenes Using Object-Aware Representations</heading></a><br>
                 <a href="https://scholar.google.com/citations?hl=en&user=dFdEHskAAAAJ&view_op=list_works&sortby=pubdate">Negin Heravi</a>, <a href="https://ayzaan.com/">Ayzaan Wahid</a>, <a href="https://coreylynch.github.io/">Corey Lynch</a>, <a href="https://www.peteflorence.com/">Pete Florence</a>, Travis Armstrong, <a href="https://cims.nyu.edu/~tompson/">Jonathan Tompson</a>, <a href="https://sermanet.github.io/home/">Pierre Sermanet</a>, <a href="https://web.stanford.edu/~bohg/">Jeannette Bohg</a>, <b>Debidatta Dwibedi</b><br>
-                <em><a href="https://www.icra2023.org/">International Conference on Robotics and Automation  2023</a></em>
+                <em><a href="https://www.icra2023.org/">International Conference on Robotics and Automation (ICRA) 2023</a></em>
                 <br>
                 <br>
-                Using slot attention to learn unsupervised features for robotics.<br>
+                Use slot attention to learn unsupervised features for robotics.<br>
               </p>
 
               <div class="paper" id="slotsforrobots">
