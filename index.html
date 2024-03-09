@@ -118,7 +118,7 @@
               <p><a href="https://arxiv.org/abs/2302.05444" id="Q-Match">
                 <heading>Q-Match: Self-Supervised Learning by Matching Distributions Induced by a Queue</heading></a><br>
                 <a href="https://github.com/tmulc18">Tommy Mulc</a>, <b>Debidatta Dwibedi</b> <br>
-                <em><a href="https://iccv2021.thecvf.com/home">Asian Conference on Machine Learning (ACML) 2023 </a></em>
+                <em><a href="https://www.acml-conf.org/2023/">Asian Conference on Machine Learning (ACML) 2023 </a></em>
                 <br>
                 <br>
                 Improved version of contrastive loss to learn features on tabular data.<br>
@@ -140,6 +140,40 @@
       eprint={2302.05444},
       archivePrefix={arXiv},
       primaryClass={cs.LG}
+}
+             </div>
+           </div>
+         </td>
+       </tr>
+
+       <tr>
+            <td width="30%" valign="top"><a href="assets/slots4robots.png"><img src="assets/slots4robots.png" width="100%" style="border-style: none"></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://arxiv.org/abs/2205.06333" id="slots4robots">
+                <heading>Visuomotor Control in Multi-Object Scenes Using Object-Aware Representations</heading></a><br>
+                <a href="https://scholar.google.com/citations?hl=en&user=dFdEHskAAAAJ&view_op=list_works&sortby=pubdate">Negin Heravi</a>, <a href="https://ayzaan.com/">Ayzaan Wahid</a>, <a href="https://coreylynch.github.io/">Corey Lynch</a>, <a href="https://www.peteflorence.com/">Pete Florence</a>, Travis Armstrong, <a href="https://cims.nyu.edu/~tompson/">Jonathan Tompson</a>, <a href="https://sermanet.github.io/home/">Pierre Sermanet</a>, <a href="https://web.stanford.edu/~bohg/">Jeannette Bohg</a>, <b>Debidatta Dwibedi</b><br>
+                <em><a href="https://www.icra2023.org/">International Conference on Robotics and Automation  2023</a></em>
+                <br>
+                <br>
+                Using slot attention to learn unsupervised features for robotics.<br>
+              </p>
+
+              <div class="paper" id="slotsforrobots">
+                <a href="https://arxiv.org/abs/2205.06333">paper</a> |
+                <a href="https://sites.google.com/view/slots4robots">project</a> |
+                <a href="javascript:toggleblock(&#39;slots4robots_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;slotsforrobots&#39;)" class="togglebib">bibtex</a>
+
+                <p align="justify"> <i id="slots4robots_abs" style="display: none;"> Perceptual understanding of the scene and the relationship between its different components is important for successful completion of robotic tasks. Representation learning has been shown to be a powerful technique for this, but most of the current methodologies learn task specific representations that do not necessarily transfer well to other tasks. Furthermore, representations learned by supervised methods require large labeled datasets for each task that are expensive to collect in the real world. Using self-supervised learning to obtain representations from unlabeled data can mitigate this problem. However, current self-supervised representation learning methods are mostly object agnostic, and we demonstrate that the resulting representations are insufficient for general purpose robotics tasks as they fail to capture the complexity of scenes with many components. In this paper, we explore the effectiveness of using object-aware representation learning techniques for robotic tasks. Our self-supervised representations are learned by observing the agent freely interacting with different parts of the environment and is queried in two different settings: (i) policy learning and (ii) object location prediction. We show that our model learns control policies in a sample-efficient manner and outperforms state-of-the-art object agnostic techniques as well as methods trained on raw RGB images. Our results show a 20 percent increase in performance in low data regimes (1000 trajectories) in policy training using implicit behavioral cloning (IBC). Furthermore, our method outperforms the baselines for the task of object localization in multi-object scenes.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+               @inproceedings{heravi2023visuomotor,
+  title={Visuomotor control in multi-object scenes using object-aware representations},
+  author={Heravi, Negin and Wahid, Ayzaan and Lynch, Corey and Florence, Pete and Armstrong, Travis and Tompson, Jonathan and Sermanet, Pierre and Bohg, Jeannette and Dwibedi, Debidatta},
+  booktitle={2023 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={9515--9522},
+  year={2023},
+  organization={IEEE}
 }
              </div>
            </div>
