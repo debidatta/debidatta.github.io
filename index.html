@@ -109,6 +109,70 @@
         <tbody><tr><td>
           <h2 id="publications">Publications</h2></td></tr>
 
+          
+          <tr>
+            <td width="30%" valign="top"><a href="assets/rt-h.png"><img src="assets/rt-h.png" width="100%" style="border-style: none"></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://arxiv.org/abs/2403.01823" id="RT-H">
+                <heading>RT-H: Action Hierarchies Using Language</heading></a><br>
+                Suneel Belkhale, Tianli Ding, Ted Xiao, Pierre Sermanet, Quon Vuong, Jonathan Tompson, Yevgen Chebotar, <b>Debidatta Dwibedi</b>, Dorsa Sadigh<br/>
+                <br>
+                <br>
+                If a robot describes what they are going to do in words first they do the task better.<br>
+              </p>
+
+              <div class="paper" id="rt-h">
+                <a href="https://arxiv.org/abs/2403.01823">paper</a> |
+                 <a href="https://rt-hierarchy.github.io/">project</a> |
+                <a href="javascript:toggleblock(&#39;rt-h_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;rt-h&#39;)" class="togglebib">bibtex</a>
+
+                <p align="justify"> <i id="rt-h_abs" style="display: none;"> Language provides a way to break down complex concepts into digestible pieces. Recent works in robot imitation learning use language-conditioned policies that predict actions given visual observations and the high-level task specified in language. These methods leverage the structure of natural language to share data between semantically similar tasks (e.g., "pick coke can" and "pick an apple") in multi-task datasets. However, as tasks become more semantically diverse (e.g., "pick coke can" and "pour cup"), sharing data between tasks becomes harder, so learning to map high-level tasks to actions requires much more demonstration data. To bridge tasks and actions, our insight is to teach the robot the language of actions, describing low-level motions with more fine-grained phrases like "move arm forward". Predicting these language motions as an intermediate step between tasks and actions forces the policy to learn the shared structure of low-level motions across seemingly disparate tasks. Furthermore, a policy that is conditioned on language motions can easily be corrected during execution through human-specified language motions. This enables a new paradigm for flexible policies that can learn from human intervention in language. Our method RT-H builds an action hierarchy using language motions: it first learns to predict language motions, and conditioned on this and the high-level task, it predicts actions, using visual context at all stages. We show that RT-H leverages this language-action hierarchy to learn policies that are more robust and flexible by effectively tapping into multi-task datasets. We show that these policies not only allow for responding to language interventions, but can also learn from such interventions and outperform methods that learn from teleoperated interventions.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+               @inproceedings{rth2024arxiv,
+    title={RT-H: Action Hierarchies using Language},
+    author={Suneel Belkhale and Tianli Ding and Ted Xiao and Pierre Sermanet and Quon Vuong and Jonathan Tompson and Yevgen Chebotar and Debidatta Dwibedi and Dorsa Sadigh},
+    booktitle={https://arxiv.org/abs/2403.01823},
+    year={2024}
+}
+             </div>
+           </div>
+         </td>
+       </tr>
+
+          <tr>
+            <td width="30%" valign="top"><a href="assets/autort.png"><img src="assets/autort.png" width="100%" style="border-style: none"></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://arxiv.org/abs/2401.12963" id="AutoRT">
+                <heading>AutoRT: Embodied Foundation Models for Large Scale Orchestration of Robotic Agents</heading></a><br>
+                Michael Ahn, <b>Debidatta Dwibedi</b>, Chelsea Finn, Montse Gonzalez Arenas, Keerthana Gopalakrishnan, Karol Hausman, Brian Ichter, Alex Irpan, Nikhil Joshi, Ryan Julian, Sean Kirmani, Isabel Leal, Edward Lee, Sergey Levine, Yao Lu, Isabel Leal, Sharath Maddineni, Kanishka Rao, Dorsa Sadigh, Pannag Sanketi, Pierre Sermanet, Quan Vuong, Stefan Welker, Fei Xia, Ted Xiao, Peng Xu, Steve Xu, Zhuo Xu<br/>
+                <br>
+                <br>
+                Orchestrating a robot fleet with LLMs and VLMs.<br>
+              </p>
+
+              <div class="paper" id="autort">
+                <a href="https://arxiv.org/abs/2401.12963">paper</a> |
+                 <a href="https://auto-rt.github.io/">project</a> |
+                <a href="javascript:toggleblock(&#39;autort_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;autort&#39;)" class="togglebib">bibtex</a>
+
+                <p align="justify"> <i id="autort_abs" style="display: none;"> Foundation models that incorporate language, vision, and more recently actions have revolutionized the ability to harness internet scale data to reason about useful tasks. However, one of the key challenges of training embodied foundation models is the lack of data grounded in the physical world. In this paper, we propose AutoRT, a system that leverages existing foundation models to scale up the deployment of operational robots in completely unseen scenarios with minimal human supervision. AutoRT leverages vision-language models (VLMs) for scene understanding and grounding, and further uses large language models (LLMs) for proposing diverse and novel instructions to be performed by a fleet of robots. Guiding data collection by tapping into the knowledge of foundation models enables AutoRT to effectively reason about autonomy tradeoffs and safety while significantly scaling up data collection for robot learning. We demonstrate AutoRT proposing instructions to over 20 robots across multiple buildings and collecting 77k real robot episodes via both teleoperation and autonomous robot policies. We experimentally show that such "in-the-wild" data collected by AutoRT is significantly more diverse, and that AutoRT's use of LLMs allows for instruction following data collection robots that can align to human preferences.</i></p>
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+               @misc{gdm2024autort,
+      title={AutoRT: Embodied Foundation Models for Large Scale Orchestration of Robotic Agents}, 
+      author={Michael Ahn and Debidatta Dwibedi and Chelsea Finn and Montse Gonzalez Arenas and Keerthana Gopalakrishnan and Karol Hausman and Brian Ichter and Alex Irpan and Nikhil Joshi and Ryan Julian and Sean Kirmani and Isabel Leal and Edward Lee and Sergey Levine and Yao Lu and Isabel Leal and Sharath Maddineni and Kanishka Rao and Dorsa Sadigh and Pannag Sanketi and Pierre Sermanet and Quan Vuong and Stefan Welker and Fei Xia and Ted Xiao and Peng Xu and Steve Xu and Zhuo Xu},
+      year={2024},
+      eprint={2401.12963},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO}
+}
+             </div>
+           </div>
+         </td>
+       </tr>
 
           <tr>
             <td width="30%" valign="top"><a href="assets/robovqa.png"><img src="assets/robovqa.png" width="100%" style="border-style: none"></a>
