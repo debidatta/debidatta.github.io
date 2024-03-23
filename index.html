@@ -109,6 +109,85 @@
         <tbody><tr><td>
           <h2 id="publications">Publications</h2></td></tr>
 
+          <tr>
+            <td width="30%" valign="top"><a href="assets/flexcap.mp4"><video width="320" height="240" playsinline muted autoplay loop>
+  <source src="assets/flexcap.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://flex-cap.github.io/" id="FLEXCAP">
+                <heading>FlexCap: Generating Rich, Localized, and Flexible Captions in Images</heading></a><br>
+               <b>Debidatta Dwibedi</b>, Vidhi Jain, Jonathan Tompson, Andrew Zisserman, Yusuf Aytar<br/>
+                <br>
+                <br>
+                Extract diverse information from images using VLMs by spatial, length and prefix conditioning.<br>
+              </p>
+
+              <div class="paper" id="flexcap">
+                <a href="https://arxiv.org/abs/2403.12026">paper</a> |
+                 <a href="https://flex-cap.github.io/">project</a> |
+                <a href="javascript:toggleblock(&#39;flexcap_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;flexcap&#39;)" class="togglebib">bibtex</a>
+
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+               @misc{dwibedi2024flexcap,
+      title={FlexCap: Generating Rich, Localized, and Flexible Captions in Images}, 
+      author={Debidatta Dwibedi and Vidhi Jain and Jonathan Tompson and Andrew Zisserman and Yusuf Aytar},
+      year={2024},
+      eprint={2403.12026},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+             </div> 
+             <p align="justify"> <i id="flexcap_abs" style="display: none;"> We introduce a versatile flexible-captioning vision-language model (VLM) capable of generating region-specific descriptions of varying lengths. The model, FlexCap, is trained to produce length-conditioned captions for input bounding boxes, and this allows control over the information density of its output, with descriptions ranging from concise object labels to detailed captions. To achieve this we create large-scale training datasets of image region descriptions of varying length, starting from captioned images.
+This flexible-captioning capability has several valuable applications. First, FlexCap demonstrates superior performance in dense captioning tasks on the Visual Genome dataset. Second, a visual question answering (VQA) system can be built by employing FlexCap to generate localized descriptions as inputs to a large language model. The resulting system achieves state-of-the-art zero-shot performance on a number of VQA datasets. We also demonstrate a localize-then-describe approach with FlexCap can be better at open-ended object detection than a describe-then-localize approach with other VLMs. We highlight a novel characteristic of FlexCap, which is its ability to extract diverse visual information through prefix conditioning. Finally, we qualitatively demonstrate FlexCap's broad applicability in tasks such as image labeling, object attribute recognition, and visual dialog.</i></p>
+
+          <tr>
+            <td width="30%" valign="top"><a href="assets/vid2robot.mp4"><video width="320" height="240" playsinline muted autoplay loop>
+  <source src="assets/vid2robot.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video></a>
+            </td><td width="70%" valign="top">
+              <p><a href="https://vid2robot.github.io/" id="VID2ROBOT">
+                <heading>Vid2Robot: End-to-end Video-conditioned Policy Learning with Cross-Attention Transformers</heading></a><br>
+               Vidhi Jain, Maria Attarian, Nikhil J Joshi, Ayzaan Wahid, Danny Driess, Quan Vuong, Pannag R Sanketi, Pierre Sermanet, Stefan Welker, Christine Chan, Igor Gilitschenski, Yonatan Bisk, <b>Debidatta Dwibedi</b><br/>
+                <br>
+                <br>
+                Robots learn to imitate humans from observation.<br>
+              </p>
+
+              <div class="paper" id="vid2robot">
+                <a href="https://arxiv.org/abs/2403.12943">paper</a> |
+                 <a href="https://vid2robot.github.io/">project</a> |
+                <a href="javascript:toggleblock(&#39;video2robot_abs&#39;)">abstract</a> |
+                <a shape="rect" href="javascript:togglebib(&#39;vid2robot&#39;)" class="togglebib">bibtex</a>
+
+
+                <div style="white-space: pre-wrap; display: none;" class="bib">
+               @misc{jain2024vid2robot,
+        title={Vid2Robot: End-to-end Video-conditioned Policy Learning with Cross-Attention Transformers}, 
+        author={Vidhi Jain and Maria Attarian and Nikhil J Joshi and Ayzaan Wahid and Danny Driess and Quan Vuong and Pannag R Sanketi and Pierre Sermanet and Stefan Welker and Christine Chan and Igor Gilitschenski and Yonatan Bisk and Debidatta Dwibedi},
+        year={2024},
+        eprint={2403.12943},
+        archivePrefix={arXiv},
+        primaryClass={cs.RO}
+  }
+             </div>
+
+
+
+                <p align="justify"> <i id="video2robot_abs" style="display: none;"> While large-scale robotic systems typically rely on textual instructions for tasks, this work explores a different approach: Can robots infer the task directly from observing humans? This shift necessitates the robot's ability to decode human intent and translate it into executable actions within its own physical constraints and environment.
+
+We introduce Vid2Robot, a novel end-to-end video-based learning framework for robots. Given a video demonstration of a manipulation task and current visual observations, Vid2Robot directly produces robot actions. This is achieved through a unified representation model trained on a large dataset of human video and robot trajectory. The model leverages cross-attention mechanisms to fuse prompt video features to the robot's current state and generate appropriate actions that mimic the observed task. To further improve policy performance, we propose auxiliary contrastive losses that enhance the alignment between human and robot video representations.
+
+We evaluate Vid2Robot on real-world robots, demonstrating a 23% improvement in performance compared to other video-conditioned policies when using human demonstration videos. Additionally, our model exhibits emergent capabilities, such as successfully transferring observed motions from one object to another, and long-horizon composition, thus showcasing its potential for real-world applications.</i></p>
+
+           </div>
+
+         </td>
+       </tr>
+
 
 
 
